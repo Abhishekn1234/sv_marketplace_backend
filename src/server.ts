@@ -3,8 +3,8 @@ import dotenv from "dotenv";
 import cors from "cors";
 import path from "path";
 import { connectDB } from "./config/db";
-import authRoutes from "./Auth/authRoutes";
-import kycRoutes from "./KYC/kycRoutes";
+import authRoutes from "./features/Auth/authRoutes";
+import kycRoutes from "./features/KYC/kycRoutes";
 
 dotenv.config();
 connectDB();

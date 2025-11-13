@@ -1,4 +1,4 @@
-import { User } from "../Auth/User";
+import { User } from "../features/Auth/User";
 import { sendOtp } from "../utils/sendOtp";
 
 // ---------------- GENERATE OTP ----------------

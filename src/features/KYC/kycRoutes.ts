@@ -1,7 +1,7 @@
 import express from "express";
 import { submitKYC, verifyKYC } from "./kycController";
-import { protect, isAdmin } from "../middlewares/authMiddleware";
-import { uploadKYC } from "../middlewares/uploadMiddleware";
+import { protect, isAdmin } from "../../middlewares/authMiddleware";
+import { uploadKYC } from "../../middlewares/uploadMiddleware";
 
 const router = express.Router();
 

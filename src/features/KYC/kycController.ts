@@ -1,7 +1,7 @@
 import { Response } from "express";
 import { KYC } from "./KYC";
 import { User } from "../Auth/User";
-import { AuthRequest } from "../middlewares/authMiddleware";
+import { AuthRequest } from "../../middlewares/authMiddleware";
 
 const mapFileToKYC = (fileName: string) => {
   const lower = fileName.toLowerCase();

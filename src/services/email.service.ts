@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { User } from "../Auth/User";
+import { User } from "../features/Auth/User";
 import { sendEmail } from "../utils/sendEmail";
 
 /**

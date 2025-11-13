@@ -4,7 +4,7 @@ import { User } from "./User";
 import {
   generateAccessToken,
   generateRefreshToken,
-} from "../utils/tokenUtils";
+} from "../../utils/tokenUtils";
 import jwt from "jsonwebtoken";
 
 // ---------------- REGISTER ----------------
