@@ -1,7 +1,7 @@
 // src/modules/KYC/controllers/kycController.ts
 
 import { Response } from "express";
-import { AuthRequest } from "../../../middlewares/authMiddleware";
+import { AuthRequest } from "../../Middlewares/Auth/authMiddleware";
 import { KYCService } from "../Service/kycService";
 
 export const getKYCByUser = async (req: AuthRequest, res: Response) => {

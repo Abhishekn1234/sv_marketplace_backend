@@ -1,7 +1,7 @@
 import express from "express";
 import { getKYCByUser, submitKYC, verifyKYC } from "../Controllers/kycController";
-import { protect, isAdmin,isCustomer } from "../../../middlewares/authMiddleware";
-import { uploadKYC } from "../../../middlewares/uploadMiddleware";
+import { protect, isAdmin,isCustomer } from "../../Middlewares/Auth/authMiddleware";
+import { uploadKYC } from "../../Middlewares/UploadImage/uploadMiddleware";
 
 const router = express.Router();
 router.use(protect,isAdmin);
