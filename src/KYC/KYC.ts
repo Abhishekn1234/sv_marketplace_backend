@@ -14,7 +14,7 @@ export interface IKYC extends Document {
   aadhaarNumber?: string;
   panNumber?: string;
   documents: IKYCDocument[];
-  status: "pending" | "verified" | "rejected";
+  status: "pending" | "verified" | "rejected" |"approved";
   remarks?: string;
   emailVerificationToken?: string;
 }
