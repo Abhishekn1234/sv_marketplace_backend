@@ -1,11 +1,11 @@
 import { Request, Response } from "express";
 import {
   registerUserService,loginUserService,
-  socialLoginService,refreshTokenService} from "./authservice";
-import { verifyOtp,generateOtp } from "../../services/otp.service";
-import { registerCoordinatorService } from "../../services/coordinator.service";
-import { forgotPasswordService,resetPasswordService, } from "../../services/email.service";
-import { registerAdminService,adminCreateUserService,adminDeleteUserService,adminEditUserService,adminVerifyUserService } from "../../services/admin.service";
+  socialLoginService,refreshTokenService} from "../Service/authservice";
+import { verifyOtp,generateOtp } from "../../Notifications/Otp/Service/otp.service";
+import { registerCoordinatorService } from "../../Coordinator/Services/coordinator.service";
+import { forgotPasswordService,resetPasswordService, } from "../../Notifications/Email/Service/email.service";
+import { registerAdminService,adminCreateUserService,adminDeleteUserService,adminEditUserService,adminVerifyUserService } from "../../Admin/Services/admin.service";
 
 export const registerUser = async (req: Request, res: Response) => {
   try {

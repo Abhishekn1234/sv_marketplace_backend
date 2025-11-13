@@ -1,5 +1,5 @@
-import { User } from "../features/Auth/User";
-import { generateAccessToken,generateRefreshToken } from "../utils/tokenUtils";
+import { User } from "../../Auth/Models/User";
+import { generateAccessToken,generateRefreshToken } from "../../../utils/tokenUtils";
 export const registerCoordinatorService = async (
   fullName: string,
   email: string,

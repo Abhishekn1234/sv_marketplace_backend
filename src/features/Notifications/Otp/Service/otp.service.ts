@@ -1,5 +1,5 @@
-import { User } from "../features/Auth/User";
-import { sendOtp } from "../utils/sendOtp";
+import { User } from "../../../../features/Auth/Models/User";
+import { sendOtp } from "../../../../utils/sendOtp";
 
 // ---------------- GENERATE OTP ----------------
 export const generateOtp = async (email: string) => {

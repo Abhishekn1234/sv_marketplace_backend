@@ -1,6 +1,6 @@
-import { User } from "../features/Auth/User";
+import { User } from "../../Auth/Models/User";
 import bcrypt from "bcryptjs";
-import { generateAccessToken,generateRefreshToken } from "../utils/tokenUtils";
+import { generateAccessToken,generateRefreshToken } from "../../../utils/tokenUtils";
 export const registerAdminService = async (
   fullName: string,
   email: string,

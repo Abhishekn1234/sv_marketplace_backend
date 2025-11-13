@@ -16,7 +16,7 @@ import {
   adminDeleteUser,
   adminVerifyUser
 } from "./auth.controller";
-import { protect, isAdmin } from "../../middlewares/authMiddleware";
+import { protect, isAdmin } from "../../../middlewares/authMiddleware";
 
 const router = express.Router();
 

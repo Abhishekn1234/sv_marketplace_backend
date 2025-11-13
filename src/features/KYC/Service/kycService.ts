@@ -1,12 +1,11 @@
-import { Response } from "express";
-import { KYC } from "./KYC";
-import { User } from "../Auth/User";
-import { AuthRequest } from "../../middlewares/authMiddleware";
+// src/modules/KYC/services/kycService.ts
+
+import { KYC } from "../Models/KYC";
+import { User } from "../../Auth/Models/User";
 
 const mapFileToKYC = (fileName: string) => {
   const lower = fileName.toLowerCase();
 
-  // Determine category
   let category: string;
   if (lower.includes("aadhaar")) category = "identity";
   else if (lower.includes("pan")) category = "identity";
@@ -17,7 +16,6 @@ const mapFileToKYC = (fileName: string) => {
     category = "income";
   else category = "other";
 
-  // Determine document type based on extension
   let documentType: string;
   if (lower.endsWith(".pdf")) documentType = "PDF Document";
   else if (lower.endsWith(".doc") || lower.endsWith(".docx")) documentType = "Word Document";
@@ -28,15 +26,17 @@ const mapFileToKYC = (fileName: string) => {
   return { category, documentType };
 };
 
-export const submitKYC = async (req: AuthRequest, res: Response) => {
-  try {
-    const { aadhaarNumber, panNumber } = req.body;
-    const documentsMeta = req.body.documentsMeta ? JSON.parse(req.body.documentsMeta) : [];
+export const KYCService = {
+  async getKYCByUser(userId: string) {
+    const kycs = await KYC.find({ user: userId }).sort({ createdAt: -1 });
+    return kycs;
+  },
 
-    if (!req.files || !(req.files instanceof Array))
-      return res.status(400).json({ message: "No KYC files uploaded" });
+  async submitKYC(userId: string, body: any, files: Express.Multer.File[]) {
+    const { aadhaarNumber, panNumber } = body;
+    const documentsMeta = body.documentsMeta ? JSON.parse(body.documentsMeta) : [];
 
-    const uploadedFiles = (req.files as Express.Multer.File[]).map((f, i) => {
+    const uploadedFiles = files.map((f, i) => {
       const meta = documentsMeta[i] || {};
       const autoMeta = mapFileToKYC(f.originalname);
 
@@ -51,7 +51,7 @@ export const submitKYC = async (req: AuthRequest, res: Response) => {
     });
 
     const kyc = await KYC.create({
-      user: req.user!._id,
+      user: userId,
       aadhaarNumber,
       panNumber,
       documents: uploadedFiles,
@@ -59,49 +59,28 @@ export const submitKYC = async (req: AuthRequest, res: Response) => {
     });
 
     const updatedUser = await User.findByIdAndUpdate(
-      req.user!._id,
+      userId,
       { kycStatus: "submitted" },
       { new: true }
     ).select("fullName email phone kycStatus");
 
-    res.status(201).json({ message: "KYC submitted successfully", kyc, user: updatedUser });
-  } catch (err: any) {
-    console.error("KYC submission error:", err);
-    res.status(500).json({ message: err.message });
-  }
-};
+    return { kyc, user: updatedUser };
+  },
 
-
-
-
-export const verifyKYC = async (req: AuthRequest, res: Response) => {
-  try {
-    const { kycId, status, remarks } = req.body;
-
-    // 1️⃣ Find KYC by ID
+  async verifyKYC(kycId: string, status: string, remarks: string) {
     const kyc = await KYC.findById(kycId);
-    if (!kyc) return res.status(404).json({ message: "KYC not found" });
+    if (!kyc) throw new Error("KYC not found");
 
-    // 2️⃣ Update KYC status and remarks
-    kyc.status = status;
+    kyc.status = status as "pending" | "approved" | "rejected" | "verified";
     kyc.remarks = remarks;
     await kyc.save();
 
-    // 3️⃣ Update user's KYC status
     const user = await User.findByIdAndUpdate(
       kyc.user,
       { kycStatus: status },
-      { new: true, select: 'fullName email phone kycStatus' } // return updated user fields
-    );
+      { new: true }
+    ).select("fullName email phone kycStatus");
 
-    // 4️⃣ Respond with both KYC and user info
-    res.json({
-      message: `KYC ${status}`,
-      kyc,
-      user
-    });
-  } catch (err: any) {
-    res.status(500).json({ message: err.message });
-  }
+    return { kyc, user };
+  },
 };
-

@@ -1,6 +1,6 @@
 import crypto from "crypto";
-import { User } from "../features/Auth/User";
-import { sendEmail } from "../utils/sendEmail";
+import { User } from "../../../Auth/Models/User";
+import { sendEmail } from "../../../../utils/sendEmail";
 
 /**
  * STEP 1: Send password reset email
