@@ -46,14 +46,18 @@ export const verifyKYC = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ message: err.message });
   }
 };
-export const DeleteKYC=async(req:AuthRequest,res:Response)=>{
-  try{
-    const kycId=req.params.kycId;
-    await KYCService.deletKYC(kycId)
-  }catch(err:any){
-    res.status(500).json({message:err.message});
+export const DeleteKYCDocument = async (req: AuthRequest, res: Response) => {
+  try {
+    const { kycId, documentId } = req.params;
+
+    const result = await KYCService.deleteKYCDocument(kycId, documentId);
+
+    res.status(200).json(result);
+  } catch (err: any) {
+    res.status(500).json({ message: err.message });
   }
 };
+
 export const getKycById=async(req:AuthRequest,res:Response)=>{
   try{
   const KycId=req.params.kycId;

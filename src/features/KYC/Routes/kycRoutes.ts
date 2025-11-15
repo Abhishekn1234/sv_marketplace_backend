@@ -3,8 +3,9 @@ import {
   getKYCByUser,
   submitKYC,
   verifyKYC,
-  DeleteKYC,
-  getKycById
+  
+  getKycById,
+  DeleteKYCDocument
 } from "../Controllers/kycController";
 
 import {
@@ -15,7 +16,7 @@ import {
 
 import { AuthRequest } from "../../Middlewares/Auth/authMiddleware";
 import { uploadKYC } from "../../Middlewares/UploadImage/uploadMiddleware";
-import { uploadProfile } from "../../Middlewares/UploadImage/uploadProfile";
+
 
 const router = express.Router();
 
@@ -50,7 +51,13 @@ router.get(
   getKYCByUser
 );
 router.get('/kyc/:kycId',protect,getKycById);
-router.delete("/delete/:kycId",protect,isCustomer,DeleteKYC);
+router.delete(
+  "/:kycId/document/:documentId",
+  protect,
+  isAdmin,
+  DeleteKYCDocument
+);
+
 /* ---------------------------
    ADMIN ROUTES
 ---------------------------- */

@@ -128,14 +128,32 @@ export const KYCService = {
   return { kyc, user };
 },
 
-async deletKYC(kycId:string){
-  const kyc =await KYC.findByIdAndDelete(kycId);
-  if(!kyc){
-   throw new Error("KYC not found");
+async deleteKYCDocument(userId: string, docId: string) {
+  const kyc = await KYC.findOne({ user: userId });
 
+  if (!kyc) throw new Error("KYC not found");
+
+  const documentIndex = kyc.documents.findIndex(
+    (doc) => doc._id?.toString() === docId
+  );
+
+  if (documentIndex === -1)
+    throw new Error("Document not found");
+
+  // Remove the document
+  kyc.documents.splice(documentIndex, 1);
+
+  // If no documents left → mark KYC as rejected
+  if (kyc.documents.length === 0) {
+    kyc.overallStatus = "rejected";
   }
-  return{message:"KYC deleted successfully"}
-},
+
+  await kyc.save();
+
+  return { message: "Document deleted successfully" };
+}
+
+,
 
 async getKycById(kycId:string){
   const kyc=await KYC.findById(kycId).populate('user','fullName email phone kycStatus');
