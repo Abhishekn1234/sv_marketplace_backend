@@ -14,9 +14,15 @@ import {
   verifyOtpController,
   adminEditUser,
   adminDeleteUser,
-  adminVerifyUser
-} from "./auth.controller";
-import { protect, isAdmin } from "../../Middlewares/Auth/authMiddleware";
+  adminVerifyUser,
+  getProfileController,
+  logoutUser,
+  submitBio,
+  changePassword
+} from "../Controllers/auth.controller";
+import { protect, isAdmin, isCustomer } from "../../Middlewares/Auth/authMiddleware";
+
+import { uploadProfile } from "../../Middlewares/UploadImage/uploadProfile";
 
 const router = express.Router();
 
@@ -34,12 +40,27 @@ router.post("/register/coordinator", registerCoordinator);
 
 // Login
 router.post("/login", loginUser);
+router.put(
+  "/bio/update",
+  protect,
+  isCustomer,
+   uploadProfile,  // Handles image upload
+  submitBio
+);
 
+// Change Password (current + new password)
+router.put(
+  "/password/update",
+  protect,
+  isCustomer,
+  changePassword
+);
 // Social login
 router.post("/social-login", socialLogin);
-
+router.get("/profile", protect,getProfileController);
+router.post("/logout",protect,logoutUser);
 // Refresh access token
-router.post("/token", Accesstoken);
+router.post("/refresh-token", Accesstoken);
 
 // Forgot password
 router.post("/forgot-password", forgotPassword);

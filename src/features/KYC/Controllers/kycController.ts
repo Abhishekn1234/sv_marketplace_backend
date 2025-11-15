@@ -13,12 +13,15 @@ export const getKYCByUser = async (req: AuthRequest, res: Response) => {
     if (!kycs.length)
       return res.status(404).json({ message: "No KYC documents found for this user" });
 
-    res.json({ message: "KYC documents retrieved successfully", kycs });
+    res.json(kycs);
   } catch (err: any) {
     console.error("Error fetching KYC documents:", err);
     res.status(500).json({ message: err.message });
   }
 };
+
+
+
 
 export const submitKYC = async (req: AuthRequest, res: Response) => {
   try {
@@ -26,7 +29,7 @@ export const submitKYC = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ message: "No KYC files uploaded" });
 
     const { kyc, user } = await KYCService.submitKYC(req.user!.id, req.body, req.files);
-    res.status(201).json({ message: "KYC submitted successfully", kyc, user });
+    res.status(201).json( {kyc,user} );
   } catch (err: any) {
     console.error("KYC submission error:", err);
     res.status(500).json({ message: err.message });
@@ -43,3 +46,20 @@ export const verifyKYC = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ message: err.message });
   }
 };
+export const DeleteKYC=async(req:AuthRequest,res:Response)=>{
+  try{
+    const kycId=req.params.kycId;
+    await KYCService.deletKYC(kycId)
+  }catch(err:any){
+    res.status(500).json({message:err.message});
+  }
+};
+export const getKycById=async(req:AuthRequest,res:Response)=>{
+  try{
+  const KycId=req.params.kycId;
+  const kyc=await KYCService.getKycById(KycId);
+  res.json(kyc);
+  }catch(err:any){
+    res.status(500).json({message:err.message});
+  }
+}

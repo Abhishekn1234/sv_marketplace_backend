@@ -1,44 +1,33 @@
 import multer from "multer";
-import path from "path";
-import fs from "fs";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
+import cloudinary from "../../../config/cloudinary";
 
-// Allowed MIME types
 const allowedTypes = [
   "image/jpeg",
   "image/png",
   "application/pdf",
+  "application/msword",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ];
 
-// Multer storage configuration
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    // Use absolute path to avoid ENOENT errors
-    const uploadDir = path.resolve(__dirname, "../uploads/kyc");
-
-    // Ensure the folder exists before saving
-    if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, `${uniqueSuffix}${path.extname(file.originalname)}`);
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: async (req, file) => {
+    return {
+      resource_type: file.mimetype.startsWith("image/") ? "image" : "raw",
+      public_id: `${Date.now()}-${Math.round(Math.random() * 1e9)}-${file.originalname}`,
+      folder: "kyc_documents", // ✅ folder goes here inside returned object
+    };
   },
 });
 
-// File filter to allow only specific types
 const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
   if (allowedTypes.includes(file.mimetype)) cb(null, true);
-  else cb(new Error("Invalid file type. Only JPG, PNG, PDF, DOCX allowed."));
+  else cb(new Error("Invalid file type. Only JPG, PNG, PDF, DOC, DOCX allowed."));
 };
 
-// Export multer middleware with limits
 export const uploadKYC = multer({
   storage,
   fileFilter,
-  limits: {
-    files: 5,                  // Maximum 5 files per request
-    fileSize: 10 * 1024 * 1024 // 10 MB per file
-  },
-});
+  limits: { files: 10, fileSize: 15 * 1024 * 1024 },
+}).array("files", 10);
