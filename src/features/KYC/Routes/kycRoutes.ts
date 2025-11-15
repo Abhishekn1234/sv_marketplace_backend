@@ -3,39 +3,25 @@ import {
   getKYCByUser,
   submitKYC,
   verifyKYC,
-  
   getKycById,
-  DeleteKYCDocument
+  DeleteKYCDocument,
 } from "../Controllers/kycController";
-
 import {
   protect,
   isAdmin,
   isCustomer,
+  AuthRequest,
 } from "../../Middlewares/Auth/authMiddleware";
-
-import { AuthRequest } from "../../Middlewares/Auth/authMiddleware";
 import { uploadKYC } from "../../Middlewares/UploadImage/uploadMiddleware";
-
 
 const router = express.Router();
 
-/* ---------------------------
-   KYC ROUTES (Customer)
----------------------------- */
-
-// Submit KYC (User uploads documents)
 router.post("/submit", protect, isCustomer, uploadKYC, submitKYC);
 
-// Update Bio (Name, email, phone, dob, nationality, address, bio, profilePicture)
-
-
-// Get logged-in user's KYC
 router.get("/me", protect, (req: AuthRequest, res: Response) => {
   return getKYCByUser(req.user?.id.toString(), res);
 });
 
-// Get KYC by specific user ID (admin or same user only)
 router.get(
   "/user/kyc/:userId",
   protect,
@@ -50,23 +36,11 @@ router.get(
   },
   getKYCByUser
 );
-router.get('/kyc/:kycId',protect,getKycById);
-router.delete(
-  "/:kycId/document/:documentId",
-  protect,
-  isAdmin,
-  DeleteKYCDocument
-);
 
-/* ---------------------------
-   ADMIN ROUTES
----------------------------- */
+router.get("/kyc/:kycId", protect, getKycById);
 
-// Admin verifies, rejects, approves KYC
+router.delete("/:kycId/document/:documentId", protect, isAdmin, DeleteKYCDocument);
+
 router.post("/verify", protect, isAdmin, verifyKYC);
-
-/* ---------------------------
-   EXPORT ROUTER
----------------------------- */
 
 export default router;
