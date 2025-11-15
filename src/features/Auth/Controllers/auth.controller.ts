@@ -26,6 +26,8 @@ import {
 } from "../../Admin/Services/admin.service";
 
 import { AuthRequest } from "../../Middlewares/Auth/authMiddleware";
+import { User } from "../Models/User";
+import cloudinary from "../../../config/cloudinary";
 
 export const registerUser = async (req: Request, res: Response) => {
   try {
@@ -52,7 +54,22 @@ export const submitBio = async (req: AuthRequest, res: Response) => {
     const userId = req.user?._id || req.user?.id;
     const { fullName, phone, nationality, dob, address, bio } = req.body;
 
-    const profilePicture = req.file ? req.file.path : undefined;
+    let newImageUrl: string | undefined;
+    let newPublicId: string | undefined;
+
+    // If user uploaded a new file
+    if (req.file) {
+      newImageUrl = req.file.path;
+      newPublicId = (req.file as any).filename; // Cloudinary public_id
+
+      // Find user
+      const user = await User.findById(userId);
+
+      // Delete old profile image from Cloudinary
+      if (user?.profilePicturePublicId) {
+        await cloudinary.uploader.destroy(user.profilePicturePublicId);
+      }
+    }
 
     const updatedUser = await updateBio(userId, {
       fullName,
@@ -61,7 +78,8 @@ export const submitBio = async (req: AuthRequest, res: Response) => {
       dob,
       address,
       bio,
-      profilePictureUrl: profilePicture
+      ...(newImageUrl && { profilePictureUrl: newImageUrl }),
+      ...(newPublicId && { profilePicturePublicId: newPublicId }),
     });
 
     res.status(200).json(updatedUser);

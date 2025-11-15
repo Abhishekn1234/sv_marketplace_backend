@@ -1,5 +1,6 @@
-import { KYC } from "../Models/KYC";
+import { IKYCDocument, KYC } from "../Models/KYC";
 import { IUser, User } from "../../Auth/Models/User";
+import cloudinary from "../../../config/cloudinary";
 
 const mapFileToKYC = (fileName: string) => {
   const lower = fileName.toLowerCase();
@@ -22,7 +23,7 @@ const mapFileToKYC = (fileName: string) => {
 
 
 export const KYCService = {
-  async getKYCByUser(userId: string) {
+async getKYCByUser(userId: string) {
   return KYC.find({ user: userId })
     .sort({ createdAt: -1 })
     .populate({
@@ -32,54 +33,66 @@ export const KYCService = {
     .lean(); // Optional: converts to plain JS objects
 },
 
- async submitKYC(userId: string, body: any, files: Express.Multer.File[]) {
-  const { nationality, address } = body;
-  const documentsMeta = body.documentsMeta ? JSON.parse(body.documentsMeta) : [];
-
-  const user = await User.findById(userId).select("fullName email phone");
+  async submitKYC(
+  userId: string,
+  body: any,
+  files: Express.Multer.File[]
+) {
+  const user = await User.findById(userId).select(
+    "fullName email phone bio address profilePictureUrl kycStatus"
+  );
   if (!user) throw new Error("User not found");
 
-  // Uploaded documents
-  const uploadedFiles = files.map((f, i) => {
-    const meta = documentsMeta[i] || {};
-    const autoMeta = mapFileToKYC(f.originalname);
+  let kyc = await KYC.findOne({ user: userId });
+  if (!kyc) {
+    kyc = new KYC({
+      user: userId,
+      documents: [],
+      overallStatus: "pending",
+      userInfoSnapshot: {
+        fullName: user.fullName,
+        email: user.email,
+        phone: user.phone,
+        bio: user.bio,
+        address: typeof user.address === "string" ? user.address : JSON.stringify(user.address),
+        profilePictureUrl: user.profilePictureUrl,
+      },
+    });
+  } else {
+    // Clear old documents completely
+    kyc.documents = [];
+  }
 
-    return {
-      category: meta.category || autoMeta.category,
-      documentType: meta.documentType || autoMeta.documentType,
+  // Map uploaded files based on field name
+  files.forEach((f) => {
+    let category: IKYCDocument["category"] = "document";
+    let documentType: IKYCDocument["documentType"] = "uploaded_file";
+
+    if (f.fieldname === "idProof") {
+      category = "idProof";
+      documentType = "idcard";
+    } else if (f.fieldname === "addressProof") {
+      category = "addressProof";
+      documentType = "address";
+    } else if (f.fieldname === "photo") {
+      category = "photoProof";
+      documentType = "photo";
+    }
+
+    const newDoc: IKYCDocument = {
+      category,
+      documentType,
       fileName: f.originalname,
-      filePath: f.path,
+      filePath: (f as any).path || (f as any).url || "",
       fileType: f.mimetype,
+      publicId: (f as any).filename,
       uploadedAt: new Date(),
-     
     };
+
+    kyc.documents.push(newDoc);
   });
 
-  const kyc = await KYC.create({
-    user: userId,
-    nationality,
-    documents: uploadedFiles,
-
-    // ⬇ ADD ADDRESS TO KYC
-    address: {
-      street: address?.street,
-      city: address?.city,
-      region: address?.region,
-      postalCode: address?.postalCode
-    },
-
-    // ⬇ SAVE USER SNAPSHOT
-    userInfoSnapshot: {
-      fullName: user.fullName,
-      email: user.email,
-      phone: user.phone,
-      bio:user.bio,
-      address:user.address,
-      profilePictureUrl:user.profilePictureUrl
-    },
-
-    overallStatus: "pending",
-  });
+  await kyc.save();
 
   const updatedUser = await User.findByIdAndUpdate(
     userId,
@@ -89,6 +102,7 @@ export const KYCService = {
 
   return { kyc, user: updatedUser };
 },
+
 
 
  async verifyKYC(
@@ -104,9 +118,7 @@ export const KYCService = {
   kyc.remarks = remarks;
   
   // If you want to update individual document statuses as well, you can do:
-  kyc.documents.forEach(doc => {
-    doc.status = status; // This updates each document's status
-  });
+  
 
   await kyc.save();
 
@@ -151,9 +163,7 @@ async deleteKYCDocument(userId: string, docId: string) {
   await kyc.save();
 
   return { message: "Document deleted successfully" };
-}
-
-,
+},
 
 async getKycById(kycId:string){
   const kyc=await KYC.findById(kycId).populate('user','fullName email phone kycStatus');

@@ -14,6 +14,7 @@ export interface IUser extends Document {
   nationality: "Saudi" | "GCC" | "Other";
   dob: Date;
   profilePictureUrl:string;
+profilePicturePublicId: string;
   address: string;
   social?: { provider?: string; socialId?: string };
   matchPassword(password: string): Promise<boolean>;
@@ -28,6 +29,7 @@ export interface IUser extends Document {
   LoginTime:string;
   LoginDate:Date;
   duration:string;
+
 }
 
 const userSchema = new Schema<IUser>(
@@ -47,6 +49,7 @@ const userSchema = new Schema<IUser>(
     role: { type: String, enum: ["customer", "employee", "coordinator", "admin"], default: "customer" },
     isVerified: { type: Boolean, default: false },
     profilePictureUrl:{type:String},
+    profilePicturePublicId:{type: String},
     nationality: { type: String, enum: ["Saudi", "GCC", "Other"] },
     dob: { type: Date },
 

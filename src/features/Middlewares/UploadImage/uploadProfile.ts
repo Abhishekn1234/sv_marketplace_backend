@@ -4,12 +4,15 @@ import cloudinary from "../../../config/cloudinary";
 
 const storage = new CloudinaryStorage({
   cloudinary,
-  params: async (req, file) => ({
-    folder: "profile_pictures", // Cloudinary folder
-    resource_type: "image",
-    public_id: `PROFILE_${Date.now()}`, // unique filename
-  }),
+  params: (req, file) => {
+    return {
+      folder: "profile_pictures",
+      resource_type: "image",
+      public_id: `PROFILE_${Date.now()}`
+    };
+  },
 });
+
 
 const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
   const allowedTypes = /jpeg|jpg|png|webp/;

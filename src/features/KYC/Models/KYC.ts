@@ -6,21 +6,22 @@ import mongoose, { Document, Schema } from "mongoose";
 
 export interface IKYCDocument {
   _id?: string;
-  category: "identity" | "address" | "income" | "other" | "business";
+  category: "identity" | "address" | "income" | "other" | "business"|"document" |"idProof"|"addressProof"|"photoProof";
   documentType:
     | "saudi_id"
     | "iqama"
     | "national_address"
-    | "cr"
+    | "cr" |"idcard"
     | "vat_certificate"
     | "bank_statement"
     | "salary_slip"
-    | "other";
+    | "other"|"uploaded_file"|"address"|"photo"
   fileName: string;
+   publicId: string,
   filePath: string;
   fileType: string;
   uploadedAt?: Date;
-  status?: "pending" | "verified" | "rejected";
+ 
   remarks?: string;
 }
 
@@ -29,7 +30,7 @@ const kycDocumentSchema = new Schema<IKYCDocument>(
     category: {
       type: String,
       required: true,
-      enum: ["identity", "address", "income", "other", "business"],
+      enum: ["identity", "address", "income", "other", "business","document","idProof","addressProof","photoProof"],
     },
 
     documentType: {
@@ -43,7 +44,7 @@ const kycDocumentSchema = new Schema<IKYCDocument>(
         "vat_certificate",
         "bank_statement",
         "salary_slip",
-        "other",
+        "other","uploaded_file","idcard","address","photo"
       ],
     },
 
@@ -64,11 +65,7 @@ const kycDocumentSchema = new Schema<IKYCDocument>(
 
     uploadedAt: { type: Date, default: Date.now },
 
-    status: {
-      type: String,
-      enum: ["pending", "verified", "rejected"],
-      default: "pending",
-    },
+   
 
     remarks: { type: String },
   },

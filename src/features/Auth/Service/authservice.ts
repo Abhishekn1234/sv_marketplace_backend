@@ -48,8 +48,9 @@ export const loginUserService = async (identifier: string, password: string) => 
     $or: [{ email: identifier }, { phone: identifier }],
   });
 
-  if (!user) throw new Error("User not found");
 
+  if (!user) throw new Error("User not found");
+     
   const isMatch = await user.matchPassword(password);
   if (!isMatch) throw new Error("Invalid credentials");
 

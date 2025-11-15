@@ -25,16 +25,34 @@ export const getKYCByUser = async (req: AuthRequest, res: Response) => {
 
 export const submitKYC = async (req: AuthRequest, res: Response) => {
   try {
-    if (!req.files || !(req.files instanceof Array))
+    // Combine all uploaded files into a single array
+    const filesArray: Express.Multer.File[] = [];
+    // console.log("req.files",req.files);
+    // console.log(filesArray);
+    
+    const filesObj = req.files as { [fieldname: string]: Express.Multer.File[] };
+
+    if (filesObj) {
+      Object.values(filesObj).forEach(fileArr => {
+        filesArray.push(...fileArr);
+      });
+    }
+
+    if (filesArray.length === 0)
       return res.status(400).json({ message: "No KYC files uploaded" });
 
-    const { kyc, user } = await KYCService.submitKYC(req.user!.id, req.body, req.files);
-    res.status(201).json( {kyc,user} );
+    const { kyc, user } = await KYCService.submitKYC(req.user!.id, req.body, filesArray);
+
+    // console.log("KYC submitted successfully:", req.body);
+    // console.log("Kyc files", filesArray);
+
+    res.status(201).json(kyc);
   } catch (err: any) {
     console.error("KYC submission error:", err);
     res.status(500).json({ message: err.message });
   }
 };
+
 
 export const verifyKYC = async (req: AuthRequest, res: Response) => {
   try {

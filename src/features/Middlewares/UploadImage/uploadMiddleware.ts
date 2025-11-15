@@ -26,8 +26,9 @@ const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCa
   else cb(new Error("Invalid file type. Only JPG, PNG, PDF, DOC, DOCX allowed."));
 };
 
-export const uploadKYC = multer({
-  storage,
-  fileFilter,
-  limits: { files: 10, fileSize: 15 * 1024 * 1024 },
-}).array("files", 10);
+export const uploadKYC = multer({ storage, fileFilter }).fields([
+  { name: "idProof", maxCount: 1 },
+  { name: "addressProof", maxCount: 1 },
+  { name: "photo", maxCount: 1 }
+]);
+
