@@ -1,5 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
+dotenv.config();
+
 import cors from "cors";
 import path from "path";
 import session from "express-session"; // <-- import session
@@ -7,7 +9,7 @@ import { connectDB } from "./config/db";
 import authRoutes from "./features/Auth/Routes/authRoutes";
 import kycRoutes from "./features/KYC/Routes/kycRoutes";
 
-dotenv.config();
+
 connectDB();
 
 const app = express();

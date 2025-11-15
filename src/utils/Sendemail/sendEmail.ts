@@ -1,12 +1,11 @@
 import nodemailer from "nodemailer";
 
 export const sendEmail = async (to: string, subject: string, html: string) => {
-  // Check if environment variables are set
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
     throw new Error("Email credentials not configured");
   }
 
-  console.log('Attempting to send email with:', process.env.EMAIL_USER);
+  console.log("Attempting to send email with:", process.env.EMAIL_USER);
 
   const transporter = nodemailer.createTransport({
     service: "gmail",
@@ -16,12 +15,11 @@ export const sendEmail = async (to: string, subject: string, html: string) => {
     },
   });
 
-  // Verify transporter configuration
   try {
     await transporter.verify();
-    console.log('Email transporter verified successfully');
+    console.log("Email transporter verified successfully");
   } catch (error) {
-    console.error('Transporter verification failed:', error);
+    console.error("Transporter verification failed:", error);
     throw error;
   }
 
@@ -34,10 +32,10 @@ export const sendEmail = async (to: string, subject: string, html: string) => {
 
   try {
     const info = await transporter.sendMail(mailOptions);
-    console.log('Email sent successfully:', info.messageId);
+    console.log("Email sent successfully:", info.messageId);
     return info;
   } catch (error) {
-    console.error('Error sending email:', error);
+    console.error("Error sending email:", error);
     throw error;
   }
 };

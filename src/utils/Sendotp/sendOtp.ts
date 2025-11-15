@@ -1,20 +1,15 @@
 import nodemailer from "nodemailer";
 
-// Load env variables
-import dotenv from "dotenv";
-dotenv.config();
-
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,        // smtp.gmail.com
-  port: 465,                          // SSL port
-  secure: true,                        // use SSL
+  host: process.env.SMTP_HOST, 
+  port: 465,
+  secure: true,
   auth: {
-    user: process.env.SMTP_USER,      // your email
-    pass: process.env.SMTP_PASS,      // Gmail App Password
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
   },
 });
 
-// Optional: verify transporter connection
 transporter.verify()
   .then(() => console.log("✅ SMTP ready (SSL 465)"))
   .catch(err => console.error("❌ SMTP connection failed:", err));
@@ -35,3 +30,4 @@ export const sendOtp = async (email: string, otp: string) => {
     throw new Error("Could not send OTP");
   }
 };
+
