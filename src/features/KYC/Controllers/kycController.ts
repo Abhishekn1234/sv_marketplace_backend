@@ -8,7 +8,7 @@ export const getKYCByUser = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.params.userId || req.user?._id;
     if (!userId) return res.status(400).json({ message: "User ID is required" });
-
+    // console.log("Fetching KYC for userId:", userId);
     const kycs = await KYCService.getKYCByUser(userId.toString());
     if (!kycs.length)
       return res.status(404).json({ message: "No KYC documents found for this user" });

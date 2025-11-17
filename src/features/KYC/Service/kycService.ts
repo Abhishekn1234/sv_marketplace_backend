@@ -25,7 +25,7 @@ const mapFileToKYC = (fileName: string) => {
 export const KYCService = {
 
 
- async  getKYCByUser(userId: string) {
+ async getKYCByUser(userId: string) {
   // Fetch KYC records for the user, latest first
   const kycRecords = await KYC.find({ userId })
     .sort({ createdAt: -1 })
@@ -36,10 +36,14 @@ export const KYCService = {
     })
     .lean(); // converts to plain JS objects
 
-  // Map KYC records for cleaner response
+  // Map KYC records safely
   return kycRecords.map((kyc) => {
-    // Clean populated user object
-    const { __v, createdAt, updatedAt, ...cleanUser } = kyc.userId as any;
+    // Cast populated userId to IUser or null
+    const user = kyc.userId as unknown as IUser | null;
+
+    const cleanUser = user
+      ? (({ __v, createdAt, updatedAt, ...rest }) => rest)(user)
+      : null;
 
     return {
       _id: kyc._id,
@@ -47,7 +51,7 @@ export const KYCService = {
       address: kyc.address,
       overallStatus: kyc.overallStatus,
       remarks: kyc.remarks,
-      user: cleanUser, // populated user info
+      user: cleanUser,
       documents: (kyc.documents || []).map((doc) => ({
         category: doc.category,
         documentType: doc.documentType,
@@ -60,7 +64,7 @@ export const KYCService = {
       })),
     };
   });
-},
+ },
 
 
  async submitKYC(
