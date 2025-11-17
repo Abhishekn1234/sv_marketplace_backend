@@ -161,12 +161,39 @@ export const changePasswords = async (
 };
 
 export const getProfileService = async (userId: string) => {
-  const user = await User.findById(userId).select(
-    "-password -otp -otpExpire -resetPasswordToken -resetPasswordExpire -accessToken -refreshToken -__v"
-  );
+  const user = await User.findById(userId);
 
   if (!user) throw new Error("User not found");
-  return user.toObject();
+
+  // Get KYC documents for the user
+  const kycDocuments = await KYC.find({ userId: user._id }).select(
+    "-__v -createdAt -updatedAt"
+  );
+
+  // Remove unwanted fields from user object
+  const {
+    password,
+    otp,
+    otpExpire,
+    resetPasswordToken,
+    resetPasswordExpire,
+    
+    
+    LoginDate,
+    LoginTime,
+    LogoutDate,
+    LogoutTime,
+    duration,
+    __v,
+    createdAt,
+    updatedAt,
+    ...userData
+  } = user.toObject();
+
+  return {
+    ...userData,
+    documents: kycDocuments,
+  };
 };
 
 export const refreshTokenService = async (refreshToken: string) => {
