@@ -24,14 +24,36 @@ const mapFileToKYC = (fileName: string) => {
 
 export const KYCService = {
 async getKYCByUser(userId: string) {
-  return KYC.find({ user: userId })
+  // Fetch KYC records for the user, latest first
+  const kycRecords = await KYC.find({ userId }) // use userId to match your schema
     .sort({ createdAt: -1 })
     .populate({
-      path: "user",
+      path: "userId",
       select: "fullName email phone profilePictureUrl address role nationality residencyStatus kycStatus",
     })
-    .lean(); // Optional: converts to plain JS objects
-},
+    .lean(); // converts to plain JS objects
+
+  // Optional: map documents for easier consumption
+  return kycRecords.map(kyc => ({
+    _id: kyc._id,
+    nationality: kyc.nationality,
+    address: kyc.address,
+    overallStatus: kyc.overallStatus,
+    remarks: kyc.remarks,
+    userInfoSnapshot: kyc.userInfoSnapshot,
+    documents: kyc.documents.map(doc => ({
+      category: doc.category,
+      documentType: doc.documentType,
+      fileName: doc.fileName,
+      publicId: doc.publicId,
+      filePath: doc.filePath,
+      fileType: doc.fileType,
+      uploadedAt: doc.uploadedAt,
+      remarks: doc.remarks,
+    })),
+  }));
+}
+,
 
  async submitKYC(
   userId: string,
