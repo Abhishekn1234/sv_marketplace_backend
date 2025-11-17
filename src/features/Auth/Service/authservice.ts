@@ -64,8 +64,8 @@ export const loginUserService = async (identifier: string, password: string) => 
   user.LoginTime = new Date().toLocaleTimeString();
   await user.save();
 
-  // Get KYC documents for the user
-  const kycDocuments = await KYC.find({ userId: user._id })
+  // Get the latest KYC document for the user
+  const latestKycDocument = await KYC.findOne({ userId: user._id })
     .sort({ createdAt: -1 })
     .select("-__v -createdAt -updatedAt") // remove metadata
     .lean();
@@ -92,12 +92,13 @@ export const loginUserService = async (identifier: string, password: string) => 
   return {
     user: {
       ...userData,
-      documents: kycDocuments || [],
+      ...latestKycDocument, // merge the latest KYC document directly
     },
     accessToken,
     refreshToken,
   };
 };
+
 export const logOutService = async (userId: string) => {
   const user = await User.findById(userId);
   if (!user) throw new Error("User not found");
@@ -195,7 +196,7 @@ export const getProfileService = async (userId: string) => {
 
   return {
     ...userData,
-    documents, // now an array of document objects
+    documents, 
   };
 };
 
