@@ -1,23 +1,23 @@
 import nodemailer from "nodemailer";
 
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST, 
-  port: 465,
-  secure: false,  // STARTTLS
+  host: process.env.EMAIL_HOST, 
+  port: 587,
+   secure: false,  // STARTTLS
   auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
   },
 });
 
 transporter.verify()
-  .then(() => console.log("✅ SMTP ready (SSL 465)"))
+  .then(() => console.log("✅ SMTP ready (SSL 587)"))
   .catch(err => console.error("❌ SMTP connection failed:", err));
 
 export const sendOtp = async (email: string, otp: string) => {
   try {
     const mailOptions = {
-      from: process.env.SMTP_USER,
+      from: process.env.EMAIL_USER,
       to: email,
       subject: "Your OTP Code",
       html: `<p>Your OTP code is: <b>${otp}</b>. It expires in 10 minutes.</p>`,
