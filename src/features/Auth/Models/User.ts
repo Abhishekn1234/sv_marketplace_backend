@@ -23,7 +23,11 @@ profilePicturePublicId: string;
   otp?: string;
   otpExpire?: Date;
   emailVerificationToken?: string;
-  
+   __v?: number;
+   
+
+
+
   resetPasswordToken?: string;
   resetPasswordExpire?: Date;
   LogoutTime:string;
