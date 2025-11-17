@@ -171,7 +171,7 @@ export const getProfileService = async (userId: string) => {
 
   // Get KYC documents for the user
   const kycDocuments = await KYC.find({ userId: user._id }).select(
-    "-__v -createdAt -updatedAt"
+    "-__v -createdAt -updatedAt userId overallStatus"
   );
 
   // Remove unwanted fields from user object
@@ -196,7 +196,7 @@ export const getProfileService = async (userId: string) => {
 
   return {
     ...userData,
-    documents: kycDocuments,
+    ...kycDocuments,
   };
 };
 
