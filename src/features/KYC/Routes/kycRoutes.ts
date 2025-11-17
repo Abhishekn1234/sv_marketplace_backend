@@ -18,9 +18,8 @@ const router = express.Router();
 
 router.post("/submit", protect, isCustomer, uploadKYC, submitKYC);
 
-router.get("/me", protect, (req: AuthRequest, res: Response) => {
-  return getKYCByUser(req.user?.id.toString(), res);
-});
+router.get("/me", protect, getKYCByUser);
+
 
 router.get(
   "/user/kyc/:userId",
