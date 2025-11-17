@@ -169,20 +169,19 @@ export const getProfileService = async (userId: string) => {
 
   if (!user) throw new Error("User not found");
 
-  // Get KYC documents for the user
-  const kycDocuments = await KYC.find({ userId: user._id }).select(
-    "-__v -createdAt -updatedAt userId overallStatus"
+  const kycDocs = await KYC.find({ userId: user._id }).select(
+    "-__v -createdAt -updatedAt -userId -overallStatus"
   );
 
-  // Remove unwanted fields from user object
+  // Extract only the 'documents' arrays
+  const kycDocuments = kycDocs.flatMap(doc => doc.documents);
+
   const {
     password,
     otp,
     otpExpire,
     resetPasswordToken,
     resetPasswordExpire,
-    
-    
     LoginDate,
     LoginTime,
     LogoutDate,
@@ -196,9 +195,11 @@ export const getProfileService = async (userId: string) => {
 
   return {
     ...userData,
-    ...kycDocuments,
+    kycDocuments, // now an array of document objects
   };
 };
+
+
 
 export const refreshTokenService = async (refreshToken: string) => {
   if (!refreshToken) throw new Error("No refresh token provided");
