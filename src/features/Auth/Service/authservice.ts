@@ -12,6 +12,7 @@ import {
   generateAccessToken,
   generateRefreshToken,
 } from "../../../utils/Auth_token/tokenUtils";
+import { KYC } from "../../KYC/Models/KYC";
 
 export const registerUserService = async (
   fullName: string,
@@ -48,19 +49,24 @@ export const loginUserService = async (identifier: string, password: string) => 
     $or: [{ email: identifier }, { phone: identifier }],
   });
 
-
   if (!user) throw new Error("User not found");
-     
+
   const isMatch = await user.matchPassword(password);
   if (!isMatch) throw new Error("Invalid credentials");
 
+  // Generate tokens
   const accessToken = generateAccessToken(user.id, user.role);
   const refreshToken = generateRefreshToken(user.id, user.role);
 
+  // Update last login
   user.LoginDate = new Date();
   user.LoginTime = new Date().toLocaleTimeString();
   await user.save();
 
+  // Get user documents from KYC
+  const kycDocuments = await KYC.find({ userId: user._id });
+
+  // Remove unwanted fields from user object
   const {
     password: _,
     otp,
@@ -74,12 +80,20 @@ export const loginUserService = async (identifier: string, password: string) => 
     LogoutDate,
     LogoutTime,
     duration,
+    createdAt,
+    updatedAt,
     ...userData
   } = user.toObject();
 
-  return { ...userData, accessToken, refreshToken };
+  return {
+    user: {
+      ...userData,
+      documents: kycDocuments,
+    },
+    accessToken,
+    refreshToken,
+  };
 };
-
 export const logOutService = async (userId: string) => {
   const user = await User.findById(userId);
   if (!user) throw new Error("User not found");
