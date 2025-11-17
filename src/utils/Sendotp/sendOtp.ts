@@ -11,7 +11,7 @@ const transporter = nodemailer.createTransport({
 });
 
 transporter.verify()
-  .then(() => console.log(`✅ SMTP ready (${transporter.options ? 'SSL 465' : 'STARTTLS 587'})`))
+  .then(() => console.log(`✅ SMTP ready (${transporter ? 'SSL 465' : 'STARTTLS 587'})`))
   .catch(err => console.error("❌ SMTP connection failed:", err));
 
 export const sendOtp = async (email: string, otp: string) => {
