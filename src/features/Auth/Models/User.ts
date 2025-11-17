@@ -6,6 +6,8 @@ export interface IUser extends Document {
   fullName: string;
   email: string;
   phone: string;
+  createdAt:Date;
+  updatedAt:Date;
   password: string;
   bio:string;
   role: "customer" | "employee" | "coordinator" | "admin";
