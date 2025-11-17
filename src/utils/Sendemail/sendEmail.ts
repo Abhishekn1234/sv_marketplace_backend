@@ -8,11 +8,15 @@ export const sendEmail = async (to: string, subject: string, html: string) => {
   console.log("Attempting to send email with:", process.env.EMAIL_USER);
 
   const transporter = nodemailer.createTransport({
-    service: "gmail",
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
     },
+    logger: true,
+    debug: true,
   });
 
   try {

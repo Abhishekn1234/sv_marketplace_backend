@@ -12,6 +12,7 @@ import {
   generateAccessToken,
   generateRefreshToken,
 } from "../../../utils/Auth_token/tokenUtils";
+import { KYC } from "../../KYC/Models/KYC";
 
 export const registerUserService = async (
   fullName: string,
@@ -44,23 +45,32 @@ export const loginUserService = async (identifier: string, password: string) => 
   if (!emailRegex.test(identifier) && !phoneRegex.test(identifier))
     throw new Error("Invalid email or phone format");
 
+  // Exclude tokens from user query
   const user = await User.findOne({
     $or: [{ email: identifier }, { phone: identifier }],
-  });
-
+  }).select("-accessToken -refreshToken");
 
   if (!user) throw new Error("User not found");
-     
+
   const isMatch = await user.matchPassword(password);
   if (!isMatch) throw new Error("Invalid credentials");
 
+  // Generate tokens
   const accessToken = generateAccessToken(user.id, user.role);
   const refreshToken = generateRefreshToken(user.id, user.role);
 
+  // Update last login
   user.LoginDate = new Date();
   user.LoginTime = new Date().toLocaleTimeString();
   await user.save();
 
+  // Get KYC documents for the user
+  const kycDocuments = await KYC.find({ userId: user._id })
+    .sort({ createdAt: -1 })
+    .select("-__v -createdAt -updatedAt") // remove metadata
+    .lean();
+
+  // Clean user object
   const {
     password: _,
     otp,
@@ -74,12 +84,20 @@ export const loginUserService = async (identifier: string, password: string) => 
     LogoutDate,
     LogoutTime,
     duration,
+    createdAt,
+    updatedAt,
     ...userData
   } = user.toObject();
 
-  return { ...userData, accessToken, refreshToken };
+  return {
+    user: {
+      ...userData,
+      documents: kycDocuments || [],
+    },
+    accessToken,
+    refreshToken,
+  };
 };
-
 export const logOutService = async (userId: string) => {
   const user = await User.findById(userId);
   if (!user) throw new Error("User not found");
@@ -147,12 +165,39 @@ export const changePasswords = async (
 };
 
 export const getProfileService = async (userId: string) => {
-  const user = await User.findById(userId).select(
-    "-password -otp -otpExpire -resetPasswordToken -resetPasswordExpire -accessToken -refreshToken -__v"
-  );
+  const user = await User.findById(userId);
 
   if (!user) throw new Error("User not found");
-  return user.toObject();
+
+  // Get KYC documents for the user
+  const kycDocuments = await KYC.find({ userId: user._id }).select(
+    "-__v -createdAt -updatedAt userId overallStatus"
+  );
+
+  // Remove unwanted fields from user object
+  const {
+    password,
+    otp,
+    otpExpire,
+    resetPasswordToken,
+    resetPasswordExpire,
+    
+    
+    LoginDate,
+    LoginTime,
+    LogoutDate,
+    LogoutTime,
+    duration,
+    __v,
+    createdAt,
+    updatedAt,
+    ...userData
+  } = user.toObject();
+
+  return {
+    ...userData,
+    ...kycDocuments,
+  };
 };
 
 export const refreshTokenService = async (refreshToken: string) => {

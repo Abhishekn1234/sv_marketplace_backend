@@ -24,46 +24,63 @@ const mapFileToKYC = (fileName: string) => {
 
 export const KYCService = {
 async getKYCByUser(userId: string) {
-  return KYC.find({ user: userId })
+  // Fetch KYC records for the user, latest first
+  const kycRecords = await KYC.find({ userId }) // use userId to match your schema
     .sort({ createdAt: -1 })
     .populate({
-      path: "user",
+      path: "userId",
       select: "fullName email phone profilePictureUrl address role nationality residencyStatus kycStatus",
     })
-    .lean(); // Optional: converts to plain JS objects
-},
+    .lean(); // converts to plain JS objects
 
-  async submitKYC(
+  // Optional: map documents for easier consumption
+  return kycRecords.map(kyc => ({
+    _id: kyc._id,
+    nationality: kyc.nationality,
+    address: kyc.address,
+    overallStatus: kyc.overallStatus,
+    remarks: kyc.remarks,
+    userInfoSnapshot: kyc.userInfoSnapshot,
+    documents: kyc.documents.map(doc => ({
+      category: doc.category,
+      documentType: doc.documentType,
+      fileName: doc.fileName,
+      publicId: doc.publicId,
+      filePath: doc.filePath,
+      fileType: doc.fileType,
+      uploadedAt: doc.uploadedAt,
+      remarks: doc.remarks,
+    })),
+  }));
+}
+,
+
+ async submitKYC(
   userId: string,
   body: any,
   files: Express.Multer.File[]
 ) {
+  // Fetch user
   const user = await User.findById(userId).select(
     "fullName email phone bio address profilePictureUrl kycStatus"
   );
   if (!user) throw new Error("User not found");
 
+  // Fetch existing KYC or create new
   let kyc = await KYC.findOne({ user: userId });
   if (!kyc) {
     kyc = new KYC({
-      user: userId,
+      userId: userId,          // reference to user
       documents: [],
-      overallStatus: "pending",
-      userInfoSnapshot: {
-        fullName: user.fullName,
-        email: user.email,
-        phone: user.phone,
-        bio: user.bio,
-        address: typeof user.address === "string" ? user.address : JSON.stringify(user.address),
-        profilePictureUrl: user.profilePictureUrl,
-      },
+      overallStatus: "pending", // default
+      // Removed userInfoSnapshot
     });
   } else {
-    // Clear old documents completely
+    // Clear old documents
     kyc.documents = [];
   }
 
-  // Map uploaded files based on field name
+  // Map uploaded files
   files.forEach((f) => {
     let category: IKYCDocument["category"] = "document";
     let documentType: IKYCDocument["documentType"] = "uploaded_file";
@@ -92,17 +109,18 @@ async getKYCByUser(userId: string) {
     kyc.documents.push(newDoc);
   });
 
+  // Save KYC
   await kyc.save();
 
+  // Update user's kycStatus to match kyc.overallStatus
   const updatedUser = await User.findByIdAndUpdate(
     userId,
-    { kycStatus: "submitted" },
+    { kycStatus: kyc.overallStatus },
     { new: true }
   ).select("fullName email phone kycStatus");
 
   return { kyc, user: updatedUser };
 },
-
 
 
  async verifyKYC(
@@ -132,7 +150,7 @@ async getKYCByUser(userId: string) {
   const mappedStatus = userKYCStatusMap[status];
 
   const user = await User.findByIdAndUpdate(
-    kyc.user,
+    kyc.userId,
     { kycStatus: mappedStatus },
     { new: true }
   ).select("fullName email phone kycStatus");
