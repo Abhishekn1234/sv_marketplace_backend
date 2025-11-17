@@ -45,10 +45,10 @@ export const loginUserService = async (identifier: string, password: string) => 
   if (!emailRegex.test(identifier) && !phoneRegex.test(identifier))
     throw new Error("Invalid email or phone format");
 
- const user = await User.findOne({
-  $or: [{ email: identifier }, { phone: identifier }],
-}).select("-accessToken -refreshToken");
-
+  // Exclude tokens from user query
+  const user = await User.findOne({
+    $or: [{ email: identifier }, { phone: identifier }],
+  }).select("-accessToken -refreshToken");
 
   if (!user) throw new Error("User not found");
 
@@ -64,10 +64,13 @@ export const loginUserService = async (identifier: string, password: string) => 
   user.LoginTime = new Date().toLocaleTimeString();
   await user.save();
 
-  // Get user documents from KYC
-  const kycDocuments = await KYC.find({ userId: user._id });
+  // Get KYC documents for the user
+  const kycDocuments = await KYC.find({ userId: user._id })
+    .sort({ createdAt: -1 })
+    .select("-__v -createdAt -updatedAt") // remove metadata
+    .lean();
 
-  // Remove unwanted fields from user object
+  // Clean user object
   const {
     password: _,
     otp,
@@ -89,7 +92,7 @@ export const loginUserService = async (identifier: string, password: string) => 
   return {
     user: {
       ...userData,
-      documents: kycDocuments,
+      documents: kycDocuments || [],
     },
     accessToken,
     refreshToken,
