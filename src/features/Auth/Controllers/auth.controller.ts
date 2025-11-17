@@ -154,11 +154,15 @@ export const loginUser = async (req: Request, res: Response) => {
   try {
     const { identifier, password } = req.body;
     const data = await loginUserService(identifier, password);
+
+   
+  
     res.json(data);
   } catch (err: any) {
     res.status(400).json({ message: err.message });
   }
 };
+
 
 export const socialLogin = async (req: Request, res: Response) => {
   try {

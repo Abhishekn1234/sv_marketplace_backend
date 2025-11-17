@@ -75,6 +75,7 @@ export const adminEditUserService = async (userId: string, updates: any) => {
   return { message: "User updated successfully", user: updatedUser };
 };
 
+
 export const adminDeleteUserService = async (userId: string) => {
   const deletedUser = await User.findByIdAndDelete(userId);
   if (!deletedUser) throw new Error("User not found");
@@ -94,3 +95,5 @@ export const adminVerifyUserService = async (userId: string) => {
     user,
   };
 };
+
+

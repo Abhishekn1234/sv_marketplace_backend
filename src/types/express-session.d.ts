@@ -11,4 +11,3 @@ declare module "express-session" {
     isLoggedIn?: boolean;
   }
 }
-
