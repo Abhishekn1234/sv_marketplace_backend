@@ -1,9 +1,9 @@
 import nodemailer from "nodemailer";
 
 const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST, 
-  port: 587,
-   secure: false,  // STARTTLS
+  host: process.env.EMAIL_HOST,
+  port: parseInt(process.env.EMAIL_PORT || "587"),
+  secure: process.env.EMAIL_PORT === "465", // true only for 465
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
@@ -11,7 +11,7 @@ const transporter = nodemailer.createTransport({
 });
 
 transporter.verify()
-  .then(() => console.log("✅ SMTP ready (SSL 465)"))
+  .then(() => console.log(`✅ SMTP ready (${transporter.options ? 'SSL 465' : 'STARTTLS 587'})`))
   .catch(err => console.error("❌ SMTP connection failed:", err));
 
 export const sendOtp = async (email: string, otp: string) => {
@@ -30,4 +30,3 @@ export const sendOtp = async (email: string, otp: string) => {
     throw new Error("Could not send OTP");
   }
 };
-
