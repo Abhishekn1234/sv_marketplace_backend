@@ -45,9 +45,10 @@ export const loginUserService = async (identifier: string, password: string) => 
   if (!emailRegex.test(identifier) && !phoneRegex.test(identifier))
     throw new Error("Invalid email or phone format");
 
-  const user = await User.findOne({
-    $or: [{ email: identifier }, { phone: identifier }],
-  });
+ const user = await User.findOne({
+  $or: [{ email: identifier }, { phone: identifier }],
+}).select("-accessToken -refreshToken");
+
 
   if (!user) throw new Error("User not found");
 
