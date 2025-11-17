@@ -33,37 +33,32 @@ async getKYCByUser(userId: string) {
     .lean(); // Optional: converts to plain JS objects
 },
 
-  async submitKYC(
+ async submitKYC(
   userId: string,
   body: any,
   files: Express.Multer.File[]
 ) {
+  // Fetch user
   const user = await User.findById(userId).select(
     "fullName email phone bio address profilePictureUrl kycStatus"
   );
   if (!user) throw new Error("User not found");
 
+  // Fetch existing KYC or create new
   let kyc = await KYC.findOne({ user: userId });
   if (!kyc) {
     kyc = new KYC({
-      user: userId,
+      userId: userId,          // reference to user
       documents: [],
-      overallStatus: "pending",
-      userInfoSnapshot: {
-        fullName: user.fullName,
-        email: user.email,
-        phone: user.phone,
-        bio: user.bio,
-        address: typeof user.address === "string" ? user.address : JSON.stringify(user.address),
-        profilePictureUrl: user.profilePictureUrl,
-      },
+      overallStatus: "pending", // default
+      // Removed userInfoSnapshot
     });
   } else {
-    // Clear old documents completely
+    // Clear old documents
     kyc.documents = [];
   }
 
-  // Map uploaded files based on field name
+  // Map uploaded files
   files.forEach((f) => {
     let category: IKYCDocument["category"] = "document";
     let documentType: IKYCDocument["documentType"] = "uploaded_file";
@@ -92,17 +87,18 @@ async getKYCByUser(userId: string) {
     kyc.documents.push(newDoc);
   });
 
+  // Save KYC
   await kyc.save();
 
+  // Update user's kycStatus to match kyc.overallStatus
   const updatedUser = await User.findByIdAndUpdate(
     userId,
-    { kycStatus: "submitted" },
+    { kycStatus: kyc.overallStatus },
     { new: true }
   ).select("fullName email phone kycStatus");
 
   return { kyc, user: updatedUser };
 },
-
 
 
  async verifyKYC(
@@ -132,7 +128,7 @@ async getKYCByUser(userId: string) {
   const mappedStatus = userKYCStatusMap[status];
 
   const user = await User.findByIdAndUpdate(
-    kyc.user,
+    kyc.userId,
     { kycStatus: mappedStatus },
     { new: true }
   ).select("fullName email phone kycStatus");
