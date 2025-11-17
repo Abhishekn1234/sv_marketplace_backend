@@ -174,7 +174,7 @@ export const getProfileService = async (userId: string) => {
   );
 
   // Extract only the 'documents' arrays
-  const kycDocuments = kycDocs.flatMap(doc => doc.documents);
+  const documents = kycDocs.flatMap(doc => doc.documents);
 
   const {
     password,
@@ -195,7 +195,7 @@ export const getProfileService = async (userId: string) => {
 
   return {
     ...userData,
-    kycDocuments, // now an array of document objects
+    documents, // now an array of document objects
   };
 };
 
