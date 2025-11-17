@@ -77,7 +77,7 @@ const kycDocumentSchema = new Schema<IKYCDocument>(
    ============================================================ */
 
 export interface IKYC extends Document {
-  user: mongoose.Schema.Types.ObjectId;
+  userId: mongoose.Schema.Types.ObjectId;
 
   nationality: "Saudi" | "GCC" | "Other";
 
@@ -107,7 +107,7 @@ export interface IKYC extends Document {
 
 const kycSchema = new Schema<IKYC>(
   {
-    user: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
 
     nationality: {
       type: String,
