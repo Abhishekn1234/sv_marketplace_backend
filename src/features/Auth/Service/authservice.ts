@@ -67,7 +67,7 @@ export const loginUserService = async (identifier: string, password: string) => 
   // Get the latest KYC document for the user
   const latestKycDocument = await KYC.findOne({ userId: user._id })
     .sort({ createdAt: -1 })
-    .select("-__v -createdAt -updatedAt") // remove metadata
+    .select("-__v -createdAt -updatedAt -overallStatus -userId") // remove metadata
     .lean();
 
   // Clean user object
@@ -88,6 +88,7 @@ export const loginUserService = async (identifier: string, password: string) => 
     updatedAt,
     ...userData
   } = user.toObject();
+  console.log("Latest KYC Document:", latestKycDocument);
 
   return {
     user: {
