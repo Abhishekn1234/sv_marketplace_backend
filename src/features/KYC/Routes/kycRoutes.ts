@@ -11,8 +11,8 @@ import {
   isAdmin,
   isCustomer,
   AuthRequest,
-} from "../../Middlewares/Auth/authMiddleware";
-import { uploadKYC } from "../../Middlewares/UploadImage/uploadMiddleware";
+} from "../../Auth/Middlewares/authMiddleware";
+import { uploadKYC } from "../Middlewares/uploadMiddleware";
 
 const router = express.Router();
 

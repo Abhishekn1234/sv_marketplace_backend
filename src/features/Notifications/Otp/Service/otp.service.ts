@@ -1,5 +1,5 @@
 import { User } from "../../../../features/Auth/Models/User";
-import { sendOtp } from "../../../../utils/Sendotp/sendOtp";
+import { sendOtp } from "../../Sendotp/sendOtp";
 
 export const generateOtp = async (email: string) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

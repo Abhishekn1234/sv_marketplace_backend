@@ -1,5 +1,6 @@
 import mongoose, { Document, Schema } from "mongoose";
 import bcrypt from "bcryptjs";
+import { KYC } from "../../KYC/Models/KYC";
 
 export interface IUser extends Document {
   _id: string;
@@ -12,8 +13,8 @@ export interface IUser extends Document {
   bio:string;
   role: "customer" | "employee" | "coordinator" | "admin";
   isVerified: boolean;
-  kycStatus: "pending" | "verified" | "rejected" | "not_submitted" | "submitted";
-  nationality: "Saudi" | "GCC" | "Other";
+  kycStatus: "pending" | "verified" | "rejected" | "not_submitted" | "submitted"|"approved";
+  nationality: string;
   dob: Date;
   profilePictureUrl:string;
 profilePicturePublicId: string;
@@ -49,7 +50,7 @@ const userSchema = new Schema<IUser>(
      LogoutDate:{type:Date},
      LogoutTime:{type:String},
      duration:{type:String},
-    // User general address (not KYC specific)
+    
     address: { type: String },
 
     role: { type: String, enum: ["customer", "employee", "coordinator", "admin"], default: "customer" },
