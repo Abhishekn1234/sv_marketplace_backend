@@ -9,6 +9,7 @@ export const strongPasswordRegex =
 
   export const BioRegex = /^(?:\b\w+\b[\s]*){50,}$/;
 export const AddressRegex = /^[a-zA-Z0-9\s,.'-]{10,}$/;
+
 export const validateRegistrationInputs = (
   email: string,
   phone: string,

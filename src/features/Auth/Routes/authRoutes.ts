@@ -33,7 +33,7 @@ router.post("/login", loginUser);
 
 
 router.put("/bio/update", protect, isCustomer, uploadProfile, submitBio);
-router.put("/password/update", protect, isEmployee, changePassword);
+router.put("/password/update", protect, isCustomer, changePassword);
 
 router.get("/profile", protect, getProfileController);
 router.post("/logout", protect, logoutUser);
