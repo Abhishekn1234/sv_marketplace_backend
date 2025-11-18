@@ -10,6 +10,22 @@ export const userRepo = {
       $or: [{ email }, { phone }],
     });
   },
+  async findUserByEmailExcludingId(email: string, excludeUserId: string) {
+  return User.findOne({
+    email,
+    _id: { $ne: excludeUserId }, // _id not equal to this ID
+  });
+},
+async findUserByPhoneExcludingId(phone: string, excludeUserId: string) {
+  return User.findOne({phone,_id:{$ne:excludeUserId}});
+},
+
+   async findUserByEmail(email: string) {
+    return User.findOne({email});
+  },
+   async findUserByPhone( phone: string) {
+    return User.findOne({phone });
+  },
     async findUserById(userId: string) {
     return User.findById(userId);
   },

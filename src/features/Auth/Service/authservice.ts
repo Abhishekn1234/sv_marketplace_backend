@@ -2,16 +2,13 @@ import { userRepo } from "../Repositories/user";
 import { getLatestKyc } from "../../KYC/Helpers/kychelpers";
 import { validateIdentifier,validateRegistrationInputs } from "../Validators/validators";
 import { generateTokens } from "../Helpers/tokens";
-import { sanitizeUser } from "../Inputs/sanitizer";
+import { sanitizeUser } from "../utils/sanitizer";
 import { filterAllowedUpdates } from "../../KYC/Helpers/kychelpers";
 import jwt from "jsonwebtoken";
 import { passwordRegex } from "../Validators/validators";
 import { IUser, User } from "../Models/User";
 import { IKYCDocument, IKYC } from "../../KYC/Models/KYC";
 import { UpdateBioData,ChangePasswordResponse,LoginUserResponse,RegisterUserResponse } from "../Types/Response";
-
-// -------- Services --------
-
 export const registerUserService = async (
   fullName: string,
   email: string,

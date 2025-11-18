@@ -7,6 +7,8 @@ export const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d!@#$%^&*]{8,12}$/;
 export const strongPasswordRegex =
   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
 
+  export const BioRegex = /^(?:\b\w+\b[\s]*){50,}$/;
+export const AddressRegex = /^[a-zA-Z0-9\s,.'-]{10,}$/;
 export const validateRegistrationInputs = (
   email: string,
   phone: string,

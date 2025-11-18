@@ -8,6 +8,8 @@ import { Express } from "express";
 
 // -------- Types --------
 import { SubmitKYCBody,KYCStatus } from "../Types/Kyc";
+import { validateKYCSubmissionstatus } from "../Validators/statusvalidation";
+
 
 export const KYCService = {
   // Get latest KYC for a user
@@ -28,7 +30,8 @@ async getKYCByUser(userId: string): Promise<IKYCDocument[]> {
 
     let kyc: IKYC | null = await KYCRepo.findOneByUser(userId);
     if (!kyc) kyc = KYCRepo.createEmpty(userId);
-
+    validateKYCSubmissionstatus(kyc.overallStatus,user.kycStatus);
+    
     const newDocs: IKYCDocument[] = mapFileToKYC(files);
 
     // Replace or add new documents
@@ -43,6 +46,7 @@ async getKYCByUser(userId: string): Promise<IKYCDocument[]> {
 
     kyc.overallStatus = "pending";
     user.kycStatus = "pending";
+    
     await user.save();
 
     return KYCRepo.save(kyc);

@@ -20,6 +20,7 @@ export interface ChangePasswordResponse {
 export interface UpdateBioData {
   fullName?: string;
   phone?: string;
+  email?:string;
   dob?: Date | string;
   bio?: string;
   address?: string;
