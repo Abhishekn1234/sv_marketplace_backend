@@ -8,18 +8,18 @@ import session from "express-session"; // <-- import session
 import { connectDB } from "./config/db";
 import authRoutes from "./features/Auth/Routes/authRoutes";
 import kycRoutes from "./features/KYC/Routes/kycRoutes";
-
+import { swaggerDocs } from "./swagger/swagger";
 
 connectDB();
 
 const app = express();
 
 app.use(express.json());
-app.use(cors({
-  origin:[
-    "http://localhost:5173",
-  ]
-}));
+app.use(cors(
+  // origin:[
+  //   "http://localhost:5173",
+  // ]
+));
 
 // Session configuration
 app.use(
@@ -42,7 +42,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/kyc", kycRoutes);
 
 
-
+swaggerDocs(app, 5000);
 app.listen(process.env.PORT, () =>
   console.log(`🚀 Server running on port ${process.env.PORT}`)
 );

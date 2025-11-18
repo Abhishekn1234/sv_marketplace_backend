@@ -6,17 +6,9 @@ import mongoose, { Document, Schema } from "mongoose";
 
 export interface IKYCDocument {
   _id?: string;
-  category: "identity" | "address" | "income" | "other" | "business"|"document" |"idProof"|"addressProof"|"photoProof";
-  documentType:
-    | "saudi_id"
-    | "iqama"
-    | "national_address"
-    | "cr" |"idcard"
-    | "vat_certificate"
-    | "bank_statement"
-    | "salary_slip"
-    | "other"|"uploaded_file"|"address"|"photo"
-  fileName: string;
+  category: string;
+  documentType:string;
+   fileName: string;
    publicId: string,
   filePath: string;
   fileType: string;
@@ -29,23 +21,14 @@ const kycDocumentSchema = new Schema<IKYCDocument>(
   {
     category: {
       type: String,
-      required: true,
-      enum: ["identity", "address", "income", "other", "business","document","idProof","addressProof","photoProof"],
+      
+      
     },
 
     documentType: {
       type: String,
-      required: true,
-      enum: [
-        "saudi_id",
-        "iqama",
-        "national_address",
-        "cr",
-        "vat_certificate",
-        "bank_statement",
-        "salary_slip",
-        "other","uploaded_file","idcard","address","photo"
-      ],
+     
+      
     },
 
     fileName: { type: String, required: true },
@@ -99,7 +82,7 @@ export interface IKYC extends Document {
 
   documents: IKYCDocument[];
 
-  overallStatus: "pending" | "verified" | "rejected" | "approved";
+  overallStatus: "pending" | "verified" | "rejected" | "approved" |"not_submitted" |"submitted";
 
   remarks?: string;
   emailVerificationToken?: string;
@@ -125,7 +108,7 @@ const kycSchema = new Schema<IKYC>(
 
     overallStatus: {
       type: String,
-      enum: ["pending", "verified", "rejected", "approved"],
+      enum: ["pending", "verified", "rejected", "approved","not_submitted","submitted"],
       default: "pending",
     },
 

@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import { User } from "../../../Auth/Models/User";
-import { sendEmail } from "../../../../utils/Sendemail/sendEmail";
+import { sendEmail } from "../../Sendemail/sendEmail";
 
 export const forgotPasswordService = async (email: string) => {
   const user = await User.findOne({ email });

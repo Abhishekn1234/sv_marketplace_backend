@@ -1,206 +1,103 @@
-import { IKYCDocument, KYC } from "../Models/KYC";
-import { IUser, User } from "../../Auth/Models/User";
-import cloudinary from "../../../config/cloudinary";
+import { KYCRepo } from "../Repositories/kyc.repo";
+import { userRepo } from "../../Auth/Repositories/user";
+import { KYCMapper } from "../Repositories/kyc.mapper";
+import { mapFileToKYC } from "../utils/fileUtils";
+import { IKYCDocument, IKYC } from "../Models/KYC";
+import { IUser } from "../../Auth/Models/User";
+import { Express } from "express";
 
-const mapFileToKYC = (fileName: string) => {
-  const lower = fileName.toLowerCase();
-  let category: "identity" | "address" | "income" | "other" = "other";
-
-  if (["aadhaar","pan","passport","iqama"].some(k => lower.includes(k))) category = "identity";
-  else if (["electricity","bill","rent"].some(k => lower.includes(k))) category = "address";
-  else if (["salary","offer","income"].some(k => lower.includes(k))) category = "income";
-
-  let documentType: string;
-  if (lower.endsWith(".pdf")) documentType = "PDF Document";
-  else if (lower.endsWith(".doc") || lower.endsWith(".docx")) documentType = "Word Document";
-  else if (lower.endsWith(".jpeg") || lower.endsWith(".jpg")) documentType = "JPEG Image";
-  else if (lower.endsWith(".png")) documentType = "PNG Image";
-  else documentType = "Unknown";
-
-  return { category, documentType };
-};
-
-
+// -------- Types --------
+import { SubmitKYCBody,KYCStatus } from "../Types/Kyc";
 
 export const KYCService = {
+  // Get latest KYC for a user
+  
 
+async getKYCByUser(userId: string): Promise<IKYCDocument[]> {
+  const kyc: IKYC | null = await KYCRepo.findOneByUser(userId);
+  if (!kyc) return [];
+  
+  const mappedKYC = KYCMapper.mapKYC(kyc); // returns object
+  return mappedKYC.documents; // <-- only return the array
+},
 
- async getKYCByUser(userId: string) {
-  // Fetch KYC records for the user, latest first
-  const kycRecords = await KYC.find({ userId })
-    .sort({ createdAt: -1 })
-    .populate({
-      path: "userId",
-      select:
-        "fullName email phone profilePictureUrl address role nationality residencyStatus kycStatus",
-    })
-    .lean(); // converts to plain JS objects
+  // Submit or update KYC documents
+  async submitKYC(userId: string, body: SubmitKYCBody, files: Express.Multer.File[]): Promise<IKYC> {
+    const user: IUser | null = await userRepo.findById(userId);
+    if (!user) throw new Error("User not found");
 
-  // Map KYC records safely
-  return kycRecords.map((kyc) => {
-    // Cast populated userId to IUser or null
-    const user = kyc.userId as unknown as IUser | null;
+    let kyc: IKYC | null = await KYCRepo.findOneByUser(userId);
+    if (!kyc) kyc = KYCRepo.createEmpty(userId);
 
-    const cleanUser = user
-      ? (({ __v, createdAt, updatedAt, ...rest }) => rest)(user)
-      : null;
+    const newDocs: IKYCDocument[] = mapFileToKYC(files);
 
-    return {
-      _id: kyc._id,
-      nationality: kyc.nationality,
-      address: kyc.address,
-      overallStatus: kyc.overallStatus,
-      remarks: kyc.remarks,
-      user: cleanUser,
-      documents: (kyc.documents || []).map((doc) => ({
-        category: doc.category,
-        documentType: doc.documentType,
-        fileName: doc.fileName,
-        publicId: doc.publicId,
-        filePath: doc.filePath,
-        fileType: doc.fileType,
-        uploadedAt: doc.uploadedAt,
-        remarks: doc.remarks,
-      })),
-    };
-  });
- },
-
-
- async submitKYC(
-  userId: string,
-  body: any,
-  files: Express.Multer.File[]
-) {
-  // Fetch user
-  const user = await User.findById(userId).select(
-    "fullName email phone bio address profilePictureUrl kycStatus"
-  );
-  if (!user) throw new Error("User not found");
-
-  // Fetch existing KYC or create new
-  let kyc = await KYC.findOne({ user: userId });
-  if (!kyc) {
-    kyc = new KYC({
-      userId: userId,          // reference to user
-      documents: [],
-      overallStatus: "pending", // default
-      // Removed userInfoSnapshot
+    // Replace or add new documents
+    newDocs.forEach(newDoc => {
+      const index = kyc!.documents.findIndex(d => d.documentType === newDoc.documentType);
+      if (index > -1) {
+        kyc!.documents[index] = newDoc;
+      } else {
+        kyc!.documents.push(newDoc);
+      }
     });
-  } else {
-    // Clear old documents
-    kyc.documents = [];
-  }
 
-  // Map uploaded files
-  files.forEach((f) => {
-    let category: IKYCDocument["category"] = "document";
-    let documentType: IKYCDocument["documentType"] = "uploaded_file";
+    kyc.overallStatus = "pending";
+    user.kycStatus = "pending";
+    await user.save();
 
-    if (f.fieldname === "idProof") {
-      category = "idProof";
-      documentType = "idcard";
-    } else if (f.fieldname === "addressProof") {
-      category = "addressProof";
-      documentType = "address";
-    } else if (f.fieldname === "photo") {
-      category = "photoProof";
-      documentType = "photo";
-    }
+    return KYCRepo.save(kyc);
+  },
 
-    const newDoc: IKYCDocument = {
-      category,
-      documentType,
-      fileName: f.originalname,
-      filePath: (f as any).path || (f as any).url || "",
-      fileType: f.mimetype,
-      publicId: (f as any).filename,
-      uploadedAt: new Date(),
+  // Verify KYC
+  async verifyKYC(
+    kycId: string,
+    status: "pending" | "verified" | "rejected",
+    remarks: string
+  ): Promise<{ kyc: IKYC; user: IUser | null }> {
+    const kyc: IKYC | null = await KYCRepo.findById(kycId);
+    if (!kyc) throw new Error("KYC not found");
+
+    kyc.overallStatus = status;
+    kyc.remarks = remarks;
+
+    await KYCRepo.save(kyc);
+
+    const userStatusMap: Record<"pending" | "verified" | "rejected", KYCStatus> = {
+      pending: "pending",
+      verified: "verified",
+      rejected: "rejected",
     };
 
-    kyc.documents.push(newDoc);
-  });
+    const user: IUser | null = await userRepo.updateKYCStatus(
+      kyc.userId.toString(),
+      userStatusMap[status]
+    );
 
-  // Save KYC
-  await kyc.save();
+    return { kyc, user };
+  },
 
-  // Update user's kycStatus to match kyc.overallStatus
-  const updatedUser = await User.findByIdAndUpdate(
-    userId,
-    { kycStatus: kyc.overallStatus },
-    { new: true }
-  ).select("fullName email phone kycStatus");
+  // Delete single KYC document
+  async deleteKYCDocument(userId: string, docId: string): Promise<{ message: string }> {
+    const kyc: IKYC | null = await KYCRepo.findOneByUser(userId);
+    if (!kyc) throw new Error("KYC not found");
 
-  return { kyc, user: updatedUser };
-},
+    const index = kyc.documents.findIndex(d => d._id?.toString() === docId);
+    if (index === -1) throw new Error("Document not found");
 
+    kyc.documents.splice(index, 1);
 
- async verifyKYC(
-  kycId: string,
-  status: "pending"  | "rejected" | "verified",
-  remarks: string
-) {
-  const kyc = await KYC.findById(kycId);
-  if (!kyc) throw new Error("KYC not found");
+    if (kyc.documents.length === 0) kyc.overallStatus = "rejected";
 
-  // Update overallStatus (this is your main KYC status field)
-  kyc.overallStatus = status;
-  kyc.remarks = remarks;
-  
-  // If you want to update individual document statuses as well, you can do:
-  
+    await KYCRepo.save(kyc);
 
-  await kyc.save();
+    return { message: "Document deleted successfully" };
+  },
 
-  const userKYCStatusMap: Record<string, string> = {
-    pending: "pending",
-    approved: "verified", 
-    verified: "verified",
-    rejected: "rejected",
-  };
-
-  const mappedStatus = userKYCStatusMap[status];
-
-  const user = await User.findByIdAndUpdate(
-    kyc.userId,
-    { kycStatus: mappedStatus },
-    { new: true }
-  ).select("fullName email phone kycStatus");
-
-  return { kyc, user };
-},
-
-async deleteKYCDocument(userId: string, docId: string) {
-  const kyc = await KYC.findOne({ user: userId });
-
-  if (!kyc) throw new Error("KYC not found");
-
-  const documentIndex = kyc.documents.findIndex(
-    (doc) => doc._id?.toString() === docId
-  );
-
-  if (documentIndex === -1)
-    throw new Error("Document not found");
-
-  // Remove the document
-  kyc.documents.splice(documentIndex, 1);
-
-  // If no documents left → mark KYC as rejected
-  if (kyc.documents.length === 0) {
-    kyc.overallStatus = "rejected";
-  }
-
-  await kyc.save();
-
-  return { message: "Document deleted successfully" };
-},
-
-async getKycById(kycId:string){
-  const kyc=await KYC.findById(kycId).populate('user','fullName email phone kycStatus');
-  if(!kyc){
-    throw new Error("KYC not found");
-  }
-  return kyc;
-}
-
+  // Get KYC by ID
+  async getKycById(kycId: string): Promise<IKYC> {
+    const kyc: IKYC | null = await KYCRepo.findByIdWithUser(kycId);
+    if (!kyc) throw new Error("KYC not found");
+    return kyc;
+  },
 };
+
