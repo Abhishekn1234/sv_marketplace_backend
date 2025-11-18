@@ -3,6 +3,7 @@ import cloudinary from "../../../config/cloudinary";
 import { IUser } from "../Models/User";
 import { userRepo } from "../Repositories/user";
 import { UpdateBioData } from "../Types/Response";
+import { AddressRegex, BioRegex, emailRegex, phoneRegex } from "../Validators/validators";
 
 export const UserService = {
   async updateBio(
@@ -10,14 +11,37 @@ export const UserService = {
     body: UpdateBioData,
     file?: Express.Multer.File
   ): Promise<IUser> {
-    const { fullName, phone, nationality, dob, address, bio } = body;
+    const { fullName,email, phone, nationality, dob, address, bio } = body;
 
     console.log("Updating bio for user:", userId);
     console.log("Body data:", body);
+     if( phone && !phoneRegex.test(phone)){
+      throw new Error("Invalid phone number");
+     }
+     if( email && !emailRegex.test(email)){
+      throw new Error("Invalid email");
+     }
+     if( bio && !BioRegex.test(bio)){
+      throw new Error("Bio should be atleast 50 characters")
+     }
+     
 
     let newImageUrl: string | undefined;
     let newPublicId: string | undefined;
+       if (phone) {
+      const existingPhoneUser = await userRepo.findUserByPhoneExcludingId(phone,userId);
+      if (existingPhoneUser && existingPhoneUser._id.toString() !== userId) {
+        throw new Error("Phone number already in use");
+      }
+    }
 
+    // Check for unique email
+    if (email) {
+      const existingEmailUser = await userRepo.findUserByEmailExcludingId(email,userId);
+      if (existingEmailUser && existingEmailUser._id.toString() !== userId) {
+        throw new Error("Email already in use");
+      }
+    }
     // If a new file is uploaded
     if (file) {
       newImageUrl = file.path;
@@ -34,6 +58,7 @@ export const UserService = {
     const updatedUser = await userRepo.updateUserById(userId, {
       fullName,
       phone,
+      email,
       nationality,
      dob: dob ? new Date(dob) : undefined, // convert string to Date if present
       address,

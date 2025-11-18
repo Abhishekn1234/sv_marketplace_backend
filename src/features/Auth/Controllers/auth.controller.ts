@@ -7,7 +7,7 @@ import {
   getProfileService,
   changePasswords,
   logOutService,
-  updateBio
+ 
 } from "../Service/authservice";
 
 import { verifyOtp, generateOtp } from "../../Notifications/Otp/Service/otp.service";
