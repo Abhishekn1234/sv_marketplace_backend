@@ -6,7 +6,7 @@ export interface AuthRequest extends Request {
   user?: IUser;
 }
 
-// 🛡️ Protect Middleware — verifies JWT and attaches user
+
 export const protect = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     let token;
@@ -31,14 +31,14 @@ export const protect = async (req: AuthRequest, res: Response, next: NextFunctio
     }
   
     req.user = user;
-    console.log(req.user);
+    // console.log(req.user);
     next();
   } catch (error) {
     return res.status(401).json({ message: "Invalid or expired token" });
   }
 };
 
-// 🔒 Role-based Access Middleware Generator
+
 export const authorizeRoles = (...roles: Array<IUser["role"]>) => {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
     if (!req.user) {
@@ -52,9 +52,7 @@ export const authorizeRoles = (...roles: Array<IUser["role"]>) => {
     next();
   };
 };
-
-// 🧩 Specific Role Shortcuts (optional convenience middlewares)
 export const isAdmin = authorizeRoles("admin");
-export const isEmployee = authorizeRoles("employee", "admin"); // admins can access employee routes too
+export const isEmployee = authorizeRoles("employee", "admin"); 
 export const isCoordinator = authorizeRoles("coordinator", "admin");
 export const isCustomer = authorizeRoles("customer", "admin","employee");

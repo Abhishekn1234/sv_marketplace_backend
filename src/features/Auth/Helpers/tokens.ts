@@ -11,10 +11,6 @@ export const generateTokens = (id: string, role: string) => {
 
   return { accessToken, refreshToken };
 };
-
-
-
-
 export const generateAccessToken = (id: string, role: string) =>
   jwt.sign({ id, role }, process.env.JWT_ACCESS_SECRET!, { expiresIn: "4h" });
 

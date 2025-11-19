@@ -13,7 +13,7 @@ export const userRepo = {
   async findUserByEmailExcludingId(email: string, excludeUserId: string) {
   return User.findOne({
     email,
-    _id: { $ne: excludeUserId }, // _id not equal to this ID
+    _id: { $ne: excludeUserId }, 
   });
 },
 async findUserByPhoneExcludingId(phone: string, excludeUserId: string) {

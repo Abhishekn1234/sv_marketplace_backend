@@ -24,7 +24,7 @@ export const registerUser = async (req: Request, res: Response) => {
     const data = await registerUserService(fullName, email, phone, password, role);
     res.status(201).json(data);
   } catch (err: any) {
-    res.status(400).json({ message: err.message });
+    res.status(500).json({ message: err.message });
   }
 };
 export const logoutUser = async (req: AuthRequest, res: Response) => {
@@ -33,7 +33,7 @@ export const logoutUser = async (req: AuthRequest, res: Response) => {
     const result = await logOutService(userId);
     res.json(result);
   } catch (err: any) {
-    res.status(400).json({ message: err.message });
+    res.status(500).json({ message: err.message });
   }
 };
 
@@ -52,15 +52,21 @@ export const submitBio = async (req: AuthRequest, res: Response) => {
 
 export const changePassword = async (req: AuthRequest, res: Response) => {
   try {
-    const userId = req.user?._id || req.user?.id;
+    const userId = req.user?.id ; // <-- GET FROM TOKEN
     const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: "Missing password fields" });
+    }
 
     const result = await changePasswords(userId, currentPassword, newPassword);
     res.json(result);
+
   } catch (err: any) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ error: err.message });
   }
 };
+
 
 export const getProfileController = async (req: AuthRequest, res: Response) => {
   try {
@@ -87,7 +93,7 @@ export const loginUser = async (req: Request, res: Response) => {
     const data = await loginUserService(identifier, password);
      res.json(data);
   } catch (err: any) {
-    res.status(400).json({ message: err.message });
+    res.status(500).json({ message: err.message });
   }
 };
 export const sendOtpController = async (req: Request, res: Response) => {
@@ -96,24 +102,25 @@ export const sendOtpController = async (req: Request, res: Response) => {
     const result = await generateOtp(email);
     res.json(result);
   } catch (err: any) {
-    res.status(400).json({ error: err.message });
+    res.status(500).json({ error: err.message });
   }
 };
 export const verifyOtpController = async (req: Request, res: Response) => {
   try {
-    const { userId, otp } = req.body;
-    const result = await verifyOtp(userId, otp);
+    const { email, otp } = req.body;
+    const result = await verifyOtp(email, otp);
     res.json(result);
   } catch (err: any) {
-    res.status(400).json({ error: err.message });
+    res.status(500).json({ error: err.message });
   }
 };
+
 export const forgotPassword = async (req: Request, res: Response) => {
   try {
     const result = await forgotPasswordService(req.body.email);
     res.json(result);
   } catch (err: any) {
-    res.status(400).json({ message: err.message });
+    res.status(500).json({ message: err.message });
   }
 };
 export const resetPassword = async (req: Request, res: Response) => {
@@ -122,6 +129,6 @@ export const resetPassword = async (req: Request, res: Response) => {
     const result = await resetPasswordService(token, password);
     res.json(result);
   } catch (err: any) {
-    res.status(400).json({ message: err.message });
+    res.status(500).json({ message: err.message });
   }
 };

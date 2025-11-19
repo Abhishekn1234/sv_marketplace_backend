@@ -1,4 +1,4 @@
-// utils/validators.ts
+
 
 export const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const phoneRegex = /^\+\d{1,3}\s?\d{10}$/;

@@ -11,3 +11,16 @@ export interface SubmitKYCBody {
 }
 
 export type KYCStatus = "pending" | "verified" | "rejected" | "approved" | "not_submitted" | "submitted";
+
+export type KYCFileCategory =
+  | "idProof"
+  | "addressProof"
+  | "photoProof";
+
+export type KYCFileType =
+  | "identity"
+  | "address"
+  | "business"
+  | "income"
+  | "document"
+  | "other";

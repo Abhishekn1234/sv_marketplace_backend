@@ -1,16 +1,5 @@
-export type KYCFileCategory =
-  | "idProof"
-  | "addressProof"
-  | "photoProof";
 
-export type KYCFileType =
-  | "identity"
-  | "address"
-  | "business"
-  | "income"
-  | "document"
-  | "other";
-
+import { KYCFileType,KYCFileCategory } from "../Types/Kyc";
 export const mapFileToKYC = (
   file: Express.Multer.File
 ): { category: KYCFileCategory; documentType: KYCFileType } => {

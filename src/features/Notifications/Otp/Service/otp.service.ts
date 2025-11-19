@@ -1,8 +1,9 @@
 import { User } from "../../../../features/Auth/Models/User";
+import { emailRegex } from "../../../Auth/Validators/validators";
 import { sendOtp } from "../../Sendotp/sendOtp";
 
 export const generateOtp = async (email: string) => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+ 
   if (!emailRegex.test(email)) throw new Error("Invalid email format");
 
   const user = await User.findOne({ email });

@@ -41,7 +41,7 @@ export const changePasswords = async (
 ): Promise<ChangePasswordResponse> => {
   const user = await userRepo.findUserById(userId);
   if (!user) throw new Error("User not found");
-
+  //  console.log(user);
   const isMatch = await user.matchPassword(currentPassword);
   if (!isMatch) throw new Error("Current password is incorrect");
 
@@ -122,7 +122,7 @@ export const getProfileService = async (
   return {
     ...sanitizeUser(user.toObject()),
     documents: latestKyc?.documents || [],
-    kycStatus: latestKyc?.overallStatus || "pending",
+    
   };
 };
 

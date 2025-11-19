@@ -3,6 +3,7 @@ import cloudinary from "../../../config/cloudinary";
 import { IUser } from "../Models/User";
 import { userRepo } from "../Repositories/user";
 import { UpdateBioData } from "../Types/Response";
+import { sanitizeUser } from "../utils/sanitizer";
 import { AddressRegex, BioRegex, emailRegex, phoneRegex } from "../Validators/validators";
 
 export const UserService = {
@@ -13,8 +14,8 @@ export const UserService = {
   ): Promise<IUser> {
     const { fullName,email, phone, nationality, dob, address, bio } = body;
 
-    console.log("Updating bio for user:", userId);
-    console.log("Body data:", body);
+    // console.log("Updating bio for user:", userId);
+    // console.log("Body data:", body);
      if( phone && !phoneRegex.test(phone)){
       throw new Error("Invalid phone number");
      }
@@ -54,7 +55,7 @@ export const UserService = {
         await cloudinary.uploader.destroy(user.profilePicturePublicId);
       }
     }
-
+    
     const updatedUser = await userRepo.updateUserById(userId, {
       fullName,
       phone,
@@ -68,9 +69,9 @@ export const UserService = {
     });
 
     if (!updatedUser) throw new Error("User not found");
+     const sanitizeuser=sanitizeUser(updatedUser.toObject());
+    // console.log("Updated user:", updatedUser);
 
-    console.log("Updated user:", updatedUser);
-
-    return updatedUser;
+    return sanitizeuser;
   },
 };
