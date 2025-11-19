@@ -74,7 +74,7 @@ export const loginUserService = async (
   const userWithDocuments: LoginUserResponse["user"] = {
     ...sanitizeUser(user.toObject()),
     documents: kyc?.documents || [],
-    kycStatus: kyc?.overallStatus || "not_submitted",
+   
   };
 
   const { accessToken, refreshToken } = generateTokens(user._id.toString(), user.role);
