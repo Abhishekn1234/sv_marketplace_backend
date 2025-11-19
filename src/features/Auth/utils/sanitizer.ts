@@ -2,23 +2,31 @@ export const sanitizeUser = (user: any) => {
   const { 
     password, 
     otp, 
+    otpExpire,
     __v, 
     refreshToken, 
     accessToken, 
     resetPasswordToken,
     resetPasswordExpires,
     resetPasswordExpire,
-    lastLoginDate,
-    lastLoginTime,
-    logoutTime,
-    logoutDate,
-    duration,
+    emailVerificationToken,
     LoginDate,
     LoginTime,
+    lastLoginDate,
+    lastLoginTime,
+    LogoutDate,
+    LogoutTime,
+    logoutDate,
+    logoutTime,
+    duration,
+    createdAt,
+    updatedAt,
     ...rest 
   } = user;
+
   return rest;
 };
+
 
 export const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const phoneRegex = /^\+\d{1,3}\s?\d{10}$/;

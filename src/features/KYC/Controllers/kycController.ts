@@ -1,6 +1,6 @@
 import { Response } from "express";
 import { AuthRequest } from "../../Auth/Middlewares/authMiddleware";
-import { KYCService } from "../Service/kycService";
+import { KYCService } from "../Services/kycService";
 import { mergeMulterFiles } from "../utils/fileUtils";
 import { formatKycResponse } from "../Repositories/kycResponseFormatter";
 export const getKYCByUser = async (req: AuthRequest, res: Response) => {
