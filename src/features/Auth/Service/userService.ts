@@ -45,7 +45,8 @@ export const UserService = {
       }
     }
     const kycdocuments=await KYCRepo.findLatestByUser(userId);
-
+    const documents=kycdocuments?.documents;
+    console.log(documents);
 
     const updatedUser = await userRepo.updateUserById(userId, {
       fullName,
