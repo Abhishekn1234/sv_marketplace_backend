@@ -1,87 +1,48 @@
 import { Response } from "express";
 import { AuthRequest } from "../../Auth/Middlewares/authMiddleware";
 import { KYCService } from "../Services/kycService";
-import { mergeMulterFiles } from "../utils/fileUtils";
-import { formatKycResponse } from "../Repositories/kycResponseFormatter";
-export const getKYCByUser = async (req: AuthRequest, res: Response) => {
-  try {
-    const userId = req.params.userId || req.user?._id;
-    if (!userId) {
-      return res.status(400).json({ message: "User ID is required" });
-    }
+import { mergeMulterFiles, formatKycResponse } from "shared-lib";
+import { controllerWrapper } from "../helpers/controllerWrapper";
+import { ok, badRequest, unauthorized, notFound } from "../helpers/response";
 
-    const documents = await KYCService.getKYCByUser(userId.toString());
+export const getKYCByUser = controllerWrapper(async (req: AuthRequest, res: Response) => {
+  const userId = req.params.userId || req.user?._id;
+  if (!userId) return badRequest(res, "User ID is required");
 
-    if (!documents || documents.length === 0) {
-      return res.status(404).json({ message: "No KYC documents found" });
-    }
+  const documents = await KYCService.getKYCByUser(userId.toString());
+  if (!documents?.length) return notFound(res, "No KYC documents found");
 
-    return res.json({ documents });
-  } catch (err: any) {
-    console.error("Error fetching KYC =>", err);
-    res.status(500).json({ message: err.message });
-  }
-};
+  return ok(res, { documents });
+});
 
+export const submitKYC = controllerWrapper(async (req: AuthRequest, res: Response) => {
+  if (!req.user) return unauthorized(res);
 
+  const files = mergeMulterFiles(req.files as Record<string, Express.Multer.File[]>);
+  if (!files.length) return badRequest(res, "No KYC files uploaded");
 
-export const submitKYC = async (req: AuthRequest, res: Response) => {
-  try {
-    const files = mergeMulterFiles(
-      req.files as Record<string, Express.Multer.File[]>
-    );
+  const kyc = await KYCService.submitKYC(req.user._id.toString(), req.body, files);
+  return ok(res, formatKycResponse(kyc), 201);
+});
 
-    if (!files.length)
-      return res.status(400).json({ message: "No KYC files uploaded" });
+export const verifyKYC = controllerWrapper(async (req: AuthRequest, res: Response) => {
+  const { kycId, status, remarks } = req.body;
+  const result = await KYCService.verifyKYC(kycId, status, remarks);
 
-    const kyc = await KYCService.submitKYC(req.user!.id, req.body, files);
+  return ok(res, {
+    message: `KYC ${status}`,
+    kyc: result.kyc,
+    user: result.user,
+  });
+});
 
-    return res.status(201).json(formatKycResponse(kyc));
+export const DeleteKYCDocument = controllerWrapper(async (req: AuthRequest, res: Response) => {
+  const { kycId, documentId } = req.params;
+  const result = await KYCService.deleteKYCDocument(kycId, documentId);
+  return ok(res, result);
+});
 
-  } catch (err: any) {
-    console.error("KYC submission error:", err);
-    res.status(500).json({ message: err.message });
-  }   
-};
-
-export const verifyKYC = async (req: AuthRequest, res: Response) => {
-  try {
-    const { kycId, status, remarks } = req.body;
-
-    const result = await KYCService.verifyKYC(kycId, status, remarks);
-
-    return res.json({
-      message: `KYC ${status}`,
-      kyc: result.kyc,
-      user: result.user,
-    });
-
-  } catch (err: any) {
-    res.status(500).json({ message: err.message });
-  }
-};
-
-export const DeleteKYCDocument = async (req: AuthRequest, res: Response) => {
-  try {
-    const { kycId, documentId } = req.params;
-
-    const result = await KYCService.deleteKYCDocument(kycId, documentId);
-
-    return res.status(200).json(result);
-
-  } catch (err: any) {
-    res.status(500).json({ message: err.message });
-  }
-};
-
-export const getKycById = async (req: AuthRequest, res: Response) => {
-  try {
-    const kycId = req.params.kycId;
-    const kyc = await KYCService.getKycById(kycId);
-
-    return res.json(kyc);
-
-  } catch (err: any) {
-    res.status(500).json({ message: err.message });
-  }
-};
+export const getKycById = controllerWrapper(async (req: AuthRequest, res: Response) => {
+  const kyc = await KYCService.getKycById(req.params.kycId);
+  return ok(res, kyc);
+});

@@ -1,134 +1,72 @@
 import { Request, Response } from "express";
+import { asyncHandler } from "../utils/asyncHandler";
 import {
   registerUserService,
   loginUserService,
- 
   refreshTokenService,
   getProfileService,
   changePasswords,
   logOutService,
- 
 } from "../Service/authservice";
-
 import { verifyOtp, generateOtp } from "../../Notifications/Otp/Service/otp.service";
-
-import {
-  forgotPasswordService,
-  resetPasswordService
-} from "../../Notifications/Email/Service/email.service";
-import { AuthRequest } from "../Middlewares/authMiddleware";
+import { forgotPasswordService, resetPasswordService } from "../../Notifications/Email/Service/email.service";
 import { UserService } from "../Service/userService";
-export const registerUser = async (req: Request, res: Response) => {
-  try {
-    const { fullName, email, phone, password, role } = req.body;
-    const data = await registerUserService(fullName, email, phone, password, role);
-    res.status(201).json(data);
-  } catch (err: any) {
-    res.status(500).json({ message: err.message });
-  }
-};
-export const logoutUser = async (req: AuthRequest, res: Response) => {
-  try {
-    const userId = req.user?._id || req.user?.id;
-    const result = await logOutService(userId);
-    res.json(result);
-  } catch (err: any) {
-    res.status(500).json({ message: err.message });
-  }
-};
+import { AuthRequest } from "../Middlewares/authMiddleware";
 
-export const submitBio = async (req: AuthRequest, res: Response) => {
-  try {
-    const userId = req.user?._id || req.user?.id;
+export const registerUser = asyncHandler(async (req: Request, res: Response) => {
+  const { fullName, email, phone, password, role } = req.body;
+  const data = await registerUserService(fullName, email, phone, password, role);
+  res.status(201).json(data);
+});
 
-    const updatedUser = await UserService.updateBio(userId, req.body, req.file);
+export const loginUser = asyncHandler(async (req: Request, res: Response) => {
+  const { identifier, password } = req.body;
+  const data = await loginUserService(identifier, password);
+  res.json(data);
+});
 
-    return res.status(200).json(updatedUser);
+export const logoutUser = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const result = await logOutService(req.user!._id.toString());
+  res.json(result);
+});
 
-  } catch (err: any) {
-    return res.status(500).json({ message: err.message });
-  }
-};
+export const getProfileController = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const profile = await getProfileService(req.user!._id.toString());
+  res.json(profile);
+});
 
-export const changePassword = async (req: AuthRequest, res: Response) => {
-  try {
-    const userId = req.user?.id ; // <-- GET FROM TOKEN
-    const { currentPassword, newPassword } = req.body;
+export const changePassword = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { currentPassword, newPassword } = req.body;
+  const result = await changePasswords(req.user!._id.toString(), currentPassword, newPassword);
+  res.json(result);
+});
 
-    if (!currentPassword || !newPassword) {
-      return res.status(400).json({ error: "Missing password fields" });
-    }
+export const submitBio = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const updated = await UserService.updateBio(req.user!._id.toString(), req.body, req.file);
+  res.json(updated);
+});
 
-    const result = await changePasswords(userId, currentPassword, newPassword);
-    res.json(result);
+export const accessToken = asyncHandler(async (req: Request, res: Response) => {
+  const result = await refreshTokenService(req.body.refreshToken);
+  res.json(result);
+});
 
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
-  }
-};
+export const sendOtpController = asyncHandler(async (req: Request, res: Response) => {
+  const result = await generateOtp(req.body.email);
+  res.json(result);
+});
 
+export const verifyOtpController = asyncHandler(async (req: Request, res: Response) => {
+  const result = await verifyOtp(req.body.email, req.body.otp);
+  res.json(result);
+});
 
-export const getProfileController = async (req: AuthRequest, res: Response) => {
-  try {
-    const userId = req.user?._id || req.user?.id;
-    const result = await getProfileService(userId);
-    res.status(200).json(result);
-  } catch (err: any) {
-    res.status(400).json({ success: false, message: err.message });
-  }
-};
+export const forgotPassword = asyncHandler(async (req: Request, res: Response) => {
+  const result = await forgotPasswordService(req.body.email);
+  res.json(result);
+});
 
-export const Accesstoken = async (req: Request, res: Response) => {
-  try {
-    const { refreshToken } = req.body;
-    const data = await refreshTokenService(refreshToken);
-    res.json(data);
-  } catch (err: any) {
-    res.status(401).json({ error: err.message });
-  }
-};
-export const loginUser = async (req: Request, res: Response) => {
-  try {
-    const { identifier, password } = req.body;
-    const data = await loginUserService(identifier, password);
-     res.json(data);
-  } catch (err: any) {
-    res.status(500).json({ message: err.message });
-  }
-};
-export const sendOtpController = async (req: Request, res: Response) => {
-  try {
-    const { email } = req.body;
-    const result = await generateOtp(email);
-    res.json(result);
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
-  }
-};
-export const verifyOtpController = async (req: Request, res: Response) => {
-  try {
-    const { email, otp } = req.body;
-    const result = await verifyOtp(email, otp);
-    res.json(result);
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
-  }
-};
-
-export const forgotPassword = async (req: Request, res: Response) => {
-  try {
-    const result = await forgotPasswordService(req.body.email);
-    res.json(result);
-  } catch (err: any) {
-    res.status(500).json({ message: err.message });
-  }
-};
-export const resetPassword = async (req: Request, res: Response) => {
-  try {
-    const { password, token } = req.body;
-    const result = await resetPasswordService(token, password);
-    res.json(result);
-  } catch (err: any) {
-    res.status(500).json({ message: err.message });
-  }
-};
+export const resetPassword = asyncHandler(async (req: Request, res: Response) => {
+  const result = await resetPasswordService(req.body.token, req.body.password);
+  res.json(result);
+});
