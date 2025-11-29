@@ -1,4 +1,4 @@
-import express, { Response, NextFunction } from "express";
+import express, { Request, Response, NextFunction } from "express";
 import {
   getKYCByUser,
   submitKYC,
@@ -6,13 +6,9 @@ import {
   getKycById,
   DeleteKYCDocument,
 } from "../Controllers/kycController";
-import {
-  protect,
-  isAdmin,
-  isCustomer,
-  AuthRequest,
-} from "../../Auth/Middlewares/authMiddleware";
+import { protect, isAdmin, isCustomer, AuthRequest } from "../../Auth/Middlewares/authMiddleware";
 import { uploadKYC } from "../Middlewares/uploadMiddleware";
+import { UserRole as Roles} from "shared-lib/dist/Types/Role";
 
 const router = express.Router();
 
@@ -34,22 +30,17 @@ const router = express.Router();
  *               idProof:
  *                 type: string
  *                 format: binary
- *                 description: Upload ID Proof (JPG, PNG, PDF, DOC, DOCX)
  *               addressProof:
  *                 type: string
  *                 format: binary
- *                 description: Upload Address Proof (JPG, PNG, PDF, DOC, DOCX)
  *               photo:
  *                 type: string
  *                 format: binary
- *                 description: Upload Passport-Size Photo (JPG, PNG only)
  *     responses:
  *       200:
  *         description: KYC submitted successfully
  */
-
-
-router.post("/submit", protect, isCustomer, uploadKYC, submitKYC);
+router.post("/submit", protect,  uploadKYC, submitKYC);
 
 /**
  * @swagger
@@ -88,17 +79,26 @@ router.get("/me", protect, getKYCByUser);
 router.get(
   "/user/kyc/:userId",
   protect,
-  (req: AuthRequest, res: Response, next: NextFunction) => {
-    if (
-      req.user?.role === "admin" ||
-      req.user?._id.toString() === req.params.userId
-    ) {
-      return next();
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Not authenticated" });
+
+    // user_role is a single role, not array
+    const role = user.user_role; // after populate this contains { name: "...", _id: ... }
+
+    const isAdminRole = role?._id?.toString() === "admin";
+    const isOwner = user._id.toString() === req.params.userId;
+
+    if (!isAdminRole && !isOwner) {
+      return res.status(403).json({ message: "Forbidden" });
     }
-    return res.status(403).json({ message: "Forbidden" });
+
+    next();
   },
   getKYCByUser
 );
+
+
 
 /**
  * @swagger
@@ -160,7 +160,7 @@ router.delete("/:kycId/document/:documentId", protect, isAdmin, DeleteKYCDocumen
  *           schema:
  *             type: object
  *             properties:
- *               userId:
+ *               kycId:
  *                 type: string
  *               status:
  *                 type: string

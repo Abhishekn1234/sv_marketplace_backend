@@ -27,6 +27,7 @@
     "multer-storage-cloudinary": "^4.0.0",
     "nodemailer": "^7.0.10",
     "nodemon": "^3.1.10",
+    "shared-lib": "github:Abhishekn1234/sv_market_placeshared_lib",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1"
   },

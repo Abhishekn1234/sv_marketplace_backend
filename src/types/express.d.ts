@@ -1,4 +1,4 @@
-import { IUser } from "../features/Auth/Models/User";
+import { IUser } from "shared-lib";
 
 declare global {
   namespace Express {
@@ -9,3 +9,5 @@ declare global {
 }
 
 export {};
+
+

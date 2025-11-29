@@ -9,7 +9,9 @@ import { connectDB } from "./config/db";
 import authRoutes from "./features/Auth/Routes/authRoutes";
 import kycRoutes from "./features/KYC/Routes/kycRoutes";
 import { swaggerDocs } from "./swagger/swagger";
-
+// import RoleRoutes from "./features/Roles/Routes/RoleRoutes";
+// import ModuleRoutes from "./features/Modules/Routes/module.routes";
+// import UserModuleRoutes from "./features/UserModule/Routes/usermodule.routes"
 connectDB();
 
 const app = express();
@@ -42,8 +44,9 @@ app.use("/uploads", express.static(path.join(process.cwd(), "src/uploads")));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/kyc", kycRoutes);
-
-
+// app.use("/api/roles",RoleRoutes);
+// app.use('/api/modules',ModuleRoutes);
+// app.use('/api/usermodules',UserModuleRoutes);
 swaggerDocs(app, 5000);
 app.listen(process.env.PORT, () =>
   console.log(`🚀 Server running on port ${process.env.PORT}`)

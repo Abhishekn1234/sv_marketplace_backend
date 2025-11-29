@@ -2,7 +2,7 @@ import express from "express";
 import {
   registerUser,
   loginUser,
-  Accesstoken,
+  accessToken as Accesstoken,
   forgotPassword,
   resetPassword,
   sendOtpController,
@@ -199,7 +199,7 @@ router.post("/login", loginUser);
  *       200:
  *         description: Bio updated successfully
  */
-router.put("/bio/update", protect, isCustomer, uploadProfile, submitBio);
+router.put("/bio/update", protect,  uploadProfile, submitBio);
 
 /**
  * @swagger
@@ -225,7 +225,7 @@ router.put("/bio/update", protect, isCustomer, uploadProfile, submitBio);
  *               message: "Password updated successfully"
  */
 
-router.put("/password/update", protect, isCustomer, changePassword);
+router.put("/password/update", protect, changePassword);
 
 /**
  * @swagger
