@@ -3,11 +3,21 @@ import { getLatestKyc, buildUserResponse, extractRoleName } from "shared-lib";
 
 
 export const buildUserData = async (
-  user: IUser,
-  kycDocuments: IKYCDocument[] = [],
+  user: any,
+  kycDocuments: any[] = [],
   role: UserRole | null = null,
   modules: IModule[] = []
-) => buildUserResponse(user, kycDocuments, role, modules);
+) => {
+  const userResp = await buildUserResponse(user, kycDocuments, role, modules);
+
+  
+  const flattenedDocs = userResp.documents?.flatMap((docWrapper: any) => docWrapper.documents || []) || [];
+
+  return {
+    ...userResp,
+    documents: flattenedDocs,
+  };
+};
 
 
 export const getUserKyc = async (userId: string): Promise<IKYCDocument[]> => {
